@@ -444,7 +444,7 @@
   function parseNum(value) {
     // Aceita: number, "12.34", "12,34", "1.234,56", "1,234.56"
     if (typeof value === "number") return value;
-    const s = String((value !== null && value !== undefined) ? value : "").trim();
+    const s = String(value ?? "").trim();
     if (!s) return 0;
 
     let x = s.replace(/\s+/g, "");
@@ -732,7 +732,7 @@ function isMobile() {
           desc: s.desc || s.nome,
           unit: Number(s.unit || 0),
           // mantém qtd atual se existir, senão usa o padrão do serviço
-          qtd: clampMin(it.qtd || ((s.qtd !== null && s.qtd !== undefined) ? s.qtd : 1), 1),
+          qtd: clampMin(it.qtd || (s.qtd ?? 1), 1),
         });
       });
 
@@ -772,24 +772,23 @@ function isMobile() {
     const s = SERVICOS_PRE[idx];
     if (!s || !s.desc) return;
 
-    // 1) Preenche o formulário (se existir)
-    if (dom.descricao()) dom.descricao().value = s.desc;
-    if (dom.valorUnitario()) dom.valorUnitario().value =
-      (typeof s.unit === "number"
-        ? s.unit.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-        : "0,00");
-    if (dom.quantidade()) dom.quantidade().value = ((s.qtd !== null && s.qtd !== undefined) ? s.qtd : 1);
-    if (dom.descontoServico()) dom.descontoServico().value = "0,00";
+    // Preenche o formulário
+    dom.descricao().value = s.desc;
+    dom.valorUnitario().value = (typeof s.unit === "number"
+      ? s.unit.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      : "0,00");
+    dom.quantidade().value = (s.qtd !== undefined && s.qtd !== null) ? s.qtd : 1;
+    dom.descontoServico().value = "0,00";
 
-    // 2) Adiciona imediatamente (não precisa clicar em "Adicionar Item")
+    // Adiciona imediatamente
     addItem({
       desc: s.desc,
-      qtd: ((s.qtd !== null && s.qtd !== undefined) ? s.qtd : 1),
+      qtd: (s.qtd !== undefined && s.qtd !== null) ? s.qtd : 1,
       unit: Number(s.unit || 0),
       desconto: 0
     });
 
-    // 3) Garante formulário aberto no mobile (pra ajustes rápidos)
+    // Mantém o formulário aberto no mobile para ajustes
     const form = dom.addForm();
     if (form) form.classList.add("open");
   }
@@ -1018,10 +1017,8 @@ function isMobile() {
     const form = dom.addForm();
     if (!btn || !form) return;
 
-    // Em iPhone/Safari, rolar a página pode disparar "resize" (barra do navegador),
-    // e isso fazia o formulário abrir/fechar e dava a sensação de sumir itens.
-    // Então aqui a gente NÃO usa resize: o usuário controla.
-
+    // Não usar resize aqui: no iPhone/Safari rolar a página pode disparar resize
+    // (por causa da barra do navegador) e isso bagunça o estado/visual.
     if (!isMobile()) form.classList.add("open"); // desktop abre por padrão
 
     btn.addEventListener("click", () => {
@@ -1048,27 +1045,14 @@ function isMobile() {
   // Init
   // =========================
   function bindEvents() {
-    var el;
+    dom.btnAddServico()?.addEventListener("click", addServicoFromForm);
+    dom.btnShare()?.addEventListener("click", sharePdf);
+    dom.btnWhatsAppFallback()?.addEventListener("click", openWhatsAppFallback);
+    dom.btnGerarPDF()?.addEventListener("click", gerarPdf);
 
-    el = dom.btnAddServico();
-    if (el) el.addEventListener("click", addServicoFromForm);
-
-    el = dom.btnShare();
-    if (el) el.addEventListener("click", sharePdf);
-
-    el = dom.btnWhatsAppFallback();
-    if (el) el.addEventListener("click", openWhatsAppFallback);
-
-    el = dom.btnGerarPDF();
-    if (el) el.addEventListener("click", gerarPdf);
-
-    el = dom.btnAplicarServico();
-    if (el) el.addEventListener("click", aplicarServicoSelecionado);
-
-    el = dom.servicoPronto();
-    if (el) el.addEventListener("change", aplicarServicoSelecionado);
+    dom.btnAplicarServico()?.addEventListener("click", aplicarServicoSelecionado);
+    dom.servicoPronto()?.addEventListener("change", aplicarServicoSelecionado);
   }
-
 
   function init() {
     popularServicosProntos();
