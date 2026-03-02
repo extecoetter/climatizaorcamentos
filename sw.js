@@ -1,4 +1,4 @@
-const CACHE_NAME = "re-orcamento-v10";
+const CACHE_NAME = "re-orcamento-v11";
 const ASSETS = [
   "./",
   "./index.html",
