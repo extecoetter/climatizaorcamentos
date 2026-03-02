@@ -349,7 +349,7 @@
  * - Menos chances de "efeito sanfona"
  */
 
-(() function {
+(() => {
   "use strict";
 
   // =========================
@@ -394,37 +394,37 @@
   // =========================
   // DOM helpers
   // =========================
-  const $ = (sel, root = document) function root.querySelector(sel);
-  const $$ = (sel, root = document) function Array.from(root.querySelectorAll(sel));
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
   const dom = {
-    cliente: () function $("#cliente"),
-    telefone: () function $("#telefoneCliente"),
-    endereco: () function $("#enderecoCliente"),
-    pagamento: () function $("#pagamento"),
-    observacoes: () function $("#observacoes"),
+    cliente: () => $("#cliente"),
+    telefone: () => $("#telefoneCliente"),
+    endereco: () => $("#enderecoCliente"),
+    pagamento: () => $("#pagamento"),
+    observacoes: () => $("#observacoes"),
 
-    descricao: () function $("#descricao"),
-    quantidade: () function $("#quantidade"),
-    valorUnitario: () function $("#valorUnitario"),
-    descontoServico: () function $("#descontoServico"),
+    descricao: () => $("#descricao"),
+    quantidade: () => $("#quantidade"),
+    valorUnitario: () => $("#valorUnitario"),
+    descontoServico: () => $("#descontoServico"),
 
-    tabelaBody: () function $("#tabela tbody"),
-    totalSpan: () function $("#total"),
-    itensCards: () function $("#itensCards"),
+    tabelaBody: () => $("#tabela tbody"),
+    totalSpan: () => $("#total"),
+    itensCards: () => $("#itensCards"),
 
-    shareArea: () function $("#shareArea"),
-    btnShare: () function $("#btnShare"),
-    btnWhatsAppFallback: () function $("#btnWhatsAppFallback"),
+    shareArea: () => $("#shareArea"),
+    btnShare: () => $("#btnShare"),
+    btnWhatsAppFallback: () => $("#btnWhatsAppFallback"),
 
-    btnAddServico: () function $("#btnAddServico"),
-    btnGerarPDF: () function $("#btnGerarPDF"),
+    btnAddServico: () => $("#btnAddServico"),
+    btnGerarPDF: () => $("#btnGerarPDF"),
 
-    servicoPronto: () function $("#servicoPronto"),
-    btnAplicarServico: () function $("#btnAplicarServico"),
+    servicoPronto: () => $("#servicoPronto"),
+    btnAplicarServico: () => $("#btnAplicarServico"),
 
-    btnToggleAdd: () function $("#btnToggleAdd"),
-    addForm: () function $("#addForm"),
+    btnToggleAdd: () => $("#btnToggleAdd"),
+    addForm: () => $("#addForm"),
   };
 
   // =========================
@@ -444,7 +444,7 @@
   function parseNum(value) {
     // Aceita: number, "12.34", "12,34", "1.234,56", "1,234.56"
     if (typeof value === "number") return value;
-    const s = String(value || "").trim();
+    const s = String((value === null || value === undefined) ? "" : value).trim();
     if (!s) return 0;
 
     let x = s.replace(/\s+/g, "");
@@ -505,10 +505,12 @@
     }
 
     var defaultValue = (opts && opts.defaultValue) ? opts.defaultValue : "0,00";
+
     if (!inputEl.value) inputEl.value = defaultValue;
 
-    inputEl.addEventListener("focus", () function {
+    inputEl.addEventListener("focus", () => {
       var defaultValue = (opts && opts.defaultValue) ? opts.defaultValue : "0,00";
+
     if (!inputEl.value) inputEl.value = defaultValue;
       try {
         const len = inputEl.value.length;
@@ -516,7 +518,7 @@
       } catch (e) {}
     });
 
-    inputEl.addEventListener("input", () function {
+    inputEl.addEventListener("input", () => {
       const digits = getDigits();
       setFromDigits(digits);
       try {
@@ -525,7 +527,7 @@
       } catch (e) {}
     });
 
-    inputEl.addEventListener("keydown", (e) function {
+    inputEl.addEventListener("keydown", (e) => {
       if (e.key === "Backspace") {
         e.preventDefault();
         const digits = getDigits();
@@ -567,12 +569,12 @@ function isMobile() {
   }
 
   function removeItem(id) {
-    state.items = state.items.filter((it) function it.id !== id);
+    state.items = state.items.filter((it) => it.id !== id);
     recalcAndRender();
   }
 
   function updateItem(id, patch) {
-    const it = state.items.find((x) function x.id === id);
+    const it = state.items.find((x) => x.id === id);
     if (!it) return;
     Object.assign(it, patch);
     // normaliza números quando necessário
@@ -587,7 +589,7 @@ function isMobile() {
   // =========================
   function recalculateTotal() {
     let total = 0;
-    state.items.forEach((it) function {
+    state.items.forEach((it) => {
       total += calcItem(it).liquido;
     });
     state.totalGeral = total;
@@ -599,7 +601,7 @@ function isMobile() {
     if (!tbody) return;
 
     tbody.innerHTML = "";
-    state.items.forEach((it) function {
+    state.items.forEach((it) => {
       const { total, liquido } = calcItem(it);
       const row = tbody.insertRow();
       row.dataset.id = it.id;
@@ -618,7 +620,7 @@ function isMobile() {
       btn.className = "btn-remove";
       btn.type = "button";
       btn.innerText = "Remover";
-      btn.addEventListener("click", () function removeItem(it.id));
+      btn.addEventListener("click", () => removeItem(it.id));
       actionCell.appendChild(btn);
     });
   }
@@ -629,7 +631,7 @@ function isMobile() {
 
     wrap.innerHTML = "";
 
-    state.items.forEach((it) function {
+    state.items.forEach((it) => {
       const { total, liquido } = calcItem(it);
 
       const card = document.createElement("div");
@@ -647,7 +649,7 @@ function isMobile() {
       optCustom.textContent = it.desc || "Item";
       sel.appendChild(optCustom);
 
-      SERVICOS_PRE.forEach((s, idx) function {
+      SERVICOS_PRE.forEach((s, idx) => {
         if (idx === 0) return;
         const opt = document.createElement("option");
         opt.value = String(idx);
@@ -661,7 +663,7 @@ function isMobile() {
       del.className = "icon-btn";
       del.setAttribute("aria-label", "Remover item");
       del.innerHTML = "🗑️";
-      del.addEventListener("click", () function removeItem(it.id));
+      del.addEventListener("click", () => removeItem(it.id));
 
       top.appendChild(sel);
       top.appendChild(del);
@@ -682,7 +684,7 @@ function isMobile() {
       moneyInput.inputMode = "decimal";
       moneyInput.value = fmtBR(it.unit);
 
-      moneyInput.addEventListener("change", () function {
+      moneyInput.addEventListener("change", () => {
         updateItem(it.id, { unit: parseNum(moneyInput.value) });
       });
 
@@ -695,7 +697,7 @@ function isMobile() {
       const btnMinus = document.createElement("button");
       btnMinus.type = "button";
       btnMinus.textContent = "−";
-      btnMinus.addEventListener("click", () function {
+      btnMinus.addEventListener("click", () => {
         updateItem(it.id, { qtd: clampMin(it.qtd - 1, 1) });
       });
 
@@ -705,7 +707,7 @@ function isMobile() {
       const btnPlus = document.createElement("button");
       btnPlus.type = "button";
       btnPlus.textContent = "+";
-      btnPlus.addEventListener("click", () function {
+      btnPlus.addEventListener("click", () => {
         updateItem(it.id, { qtd: clampMin(it.qtd + 1, 1) });
       });
 
@@ -725,7 +727,7 @@ function isMobile() {
          <span>Líquido: <b>${CONFIG.CURRENCY_PREFIX} ${fmtBR(liquido)}</b></span>`;
 
       // Aplicar serviço pronto pelo select do card
-      sel.addEventListener("change", () function {
+      sel.addEventListener("change", () => {
         const idx = parseInt(sel.value, 10);
         if (Number.isNaN(idx) || idx < 1) return;
         const s = SERVICOS_PRE[idx];
@@ -734,7 +736,7 @@ function isMobile() {
           desc: s.desc || s.nome,
           unit: Number(s.unit || 0),
           // mantém qtd atual se existir, senão usa o padrão do serviço
-          qtd: clampMin(it.qtd || (s.qtd || 1), 1),
+          qtd: clampMin(it.qtd || ((s.qtd !== undefined && s.qtd !== null) ? s.qtd : 1), 1),
         });
       });
 
@@ -759,7 +761,7 @@ function isMobile() {
     const sel = dom.servicoPronto();
     if (!sel) return;
     sel.innerHTML = "";
-    SERVICOS_PRE.forEach((s, idx) function {
+    SERVICOS_PRE.forEach((s, idx) => {
       const opt = document.createElement("option");
       opt.value = String(idx);
       opt.textContent = s.nome;
@@ -768,30 +770,31 @@ function isMobile() {
   }
 
   function aplicarServicoSelecionado() {
-    var sel = dom.servicoPronto();
+    const sel = dom.servicoPronto();
     if (!sel) return;
-    var idx = parseInt(sel.value, 10);
-    var s = SERVICOS_PRE[idx];
+    const idx = parseInt(sel.value, 10);
+    const s = SERVICOS_PRE[idx];
     if (!s || !s.desc) return;
 
-    // Preenche o formulário
-    dom.descricao().value = s.desc;
-    dom.valorUnitario().value = (typeof s.unit === "number"
-      ? s.unit.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-      : "0,00");
-    dom.quantidade().value = (s.qtd !== undefined && s.qtd !== null) ? s.qtd : 1;
-    dom.descontoServico().value = "0,00";
+    // 1) Preenche o formulário (se existir)
+    if (dom.descricao()) dom.descricao().value = s.desc;
+    if (dom.valorUnitario()) dom.valorUnitario().value =
+      (typeof s.unit === "number"
+        ? s.unit.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : "0,00");
+    if (dom.quantidade()) dom.quantidade().value = ((s.qtd !== undefined && s.qtd !== null) ? s.qtd : 1);
+    if (dom.descontoServico()) dom.descontoServico().value = "0,00";
 
-    // Adiciona imediatamente
+    // 2) Adiciona imediatamente (não precisa clicar em "Adicionar Item")
     addItem({
       desc: s.desc,
-      qtd: (s.qtd !== undefined && s.qtd !== null) ? s.qtd : 1,
+      qtd: ((s.qtd !== undefined && s.qtd !== null) ? s.qtd : 1),
       unit: Number(s.unit || 0),
       desconto: 0
     });
 
-    // Mantém o formulário aberto no mobile para ajustes
-    var form = dom.addForm();
+    // 3) Garante formulário aberto no mobile (pra ajustes rápidos)
+    const form = dom.addForm();
     if (form) form.classList.add("open");
   }
 
@@ -845,7 +848,7 @@ function isMobile() {
   // PDF
   // =========================
   function loadImageAsDataURL(src) {
-    return new Promise((resolve, reject) function {
+    return new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.onload = function () {
@@ -863,7 +866,7 @@ function isMobile() {
   }
 
   function getBodyForPdf() {
-    return state.items.map((it) function {
+    return state.items.map((it) => {
       const { total, liquido } = calcItem(it);
       return [
         it.desc,
@@ -1011,25 +1014,48 @@ function isMobile() {
     dom.shareArea().style.display = "block";
   }
 
+  
   // =========================
+  // Tabs (Serviços)
+  // =========================
+  function initTabs() {
+    var btns = $$(".tab-btn");
+    if (!btns || !btns.length) return;
+
+    var panes = $$(".tab-pane");
+
+    function activate(id) {
+      btns.forEach(function (b) {
+        b.classList.toggle("active", b.dataset.tab === id);
+      });
+      panes.forEach(function (p) {
+        p.classList.toggle("active", p.id === id);
+      });
+
+      // quando entrar em "serviços prontos", abre o formulário para ajustes rápidos
+      if (id === "tab-prontos") {
+        var form = dom.addForm();
+        if (form) form.classList.add("open");
+      }
+    }
+
+    btns.forEach(function (b) {
+      b.addEventListener("click", function () {
+        activate(b.dataset.tab);
+      });
+    });
+
+    activate("tab-add");
+  }
+
+// =========================
   // Mobile UX
   // =========================
   function initMobileAddToggle() {
-    var btn = dom.btnToggleAdd();
     var form = dom.addForm();
-    if (!btn || !form) return;
-
-    // Não usar resize aqui: no iPhone/Safari rolar a página pode disparar resize
-    // (por causa da barra do navegador) e isso bagunça o estado/visual.
-    if (!isMobile()) form.classList.add("open"); // desktop abre por padrão
-
-    btn.addEventListener("click", function () {
-      form.classList.toggle("open");
-      if (form.classList.contains("open")) {
-        var el = dom.descricao();
-        try { if (el) el.focus(); } catch (e) {}
-        try { form.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {}
-      }
+    if (!form) return;
+    if (!isMobile()) form.classList.add("open");
+  }
     });
   }
 
@@ -1037,8 +1063,10 @@ function isMobile() {
   // PWA
   // =========================
   function initPWA() {
-    // Service Worker desativado temporariamente para evitar cache travado durante ajustes.
-    // (Depois que estabilizar, a gente reativa.)
+    if (!("serviceWorker" in navigator)) return;
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    });
   }
 
   // =========================
@@ -1064,6 +1092,18 @@ function isMobile() {
 
     el = dom.servicoPronto();
     if (el) el.addEventListener("change", aplicarServicoSelecionado);
+
+    el = dom.btnToggleAdd();
+    if (el) el.addEventListener("click", function () {
+      var form = dom.addForm();
+      if (!form) return;
+      form.classList.toggle("open");
+      if (form.classList.contains("open")) {
+        var d = dom.descricao();
+        try { if (d) d.focus(); } catch (e) {}
+        try { form.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {}
+      }
+    });
   }
 
 
