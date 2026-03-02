@@ -292,7 +292,7 @@
 <div id="tab-prontos" class="tab-pane">
   <label class="field-label">Serviços prontos</label>
   <select id="servicoPronto" class="item-select"></select>
-  <button class="secondary" id="btnAplicarServico" type="button" style="margin-top:10px;">Aplicar no formulário</button>
+  <button class="secondary" id="btnAplicarServico" type="button" style="margin-top:10px;">Adicionar serviço</button>
   <p class="muted" style="margin:10px 0 0 0;">Dica: ao aplicar, a descrição, quantidade e valor unitário são preenchidos automaticamente.</p>
 </div>
 <hr style="border:none;border-top:1px solid #e5e7eb;margin:12px 0;"/>
@@ -343,19 +343,17 @@
 </div>
 <script>
 /**
- * RE Climatização - Orçamento (fase 2: fonte única de dados)
- * - items[] é a "verdade"
- * - Tabela e Cards são apenas renderizações
- * - Menos chances de "efeito sanfona"
+ * RE Orçamento (ES5 compatível p/ iPhone antigo)
+ * - Fonte única: state.items[]
+ * - Serviços prontos com abas
+ * - Máscara de moeda (digita da direita pra esquerda)
+ * - PDF sem assinatura
  */
-
-(() => {
+(function () {
   "use strict";
 
-  // =========================
-  // Config
-  // =========================
-  const CONFIG = {
+  // ===== Config =====
+  var CONFIG = {
     CURRENCY_PREFIX: "R$",
     MOBILE_BREAKPOINT: 768,
     PDF: {
@@ -363,13 +361,13 @@
       lineBlue: [210, 225, 245],
       boxBlue: [248, 252, 255],
       logoPath: "logo.png",
-      proposalTitle: "Proposta Comercial",
+      proposalTitle: "Proposta Comercial"
     },
-    FILENAME_PREFIX: "Orcamento_",
+    FILENAME_PREFIX: "Orcamento_"
   };
 
   // ✅ EDITE AQUI SUA LISTA DE SERVIÇOS PRONTOS
-  const SERVICOS_PRE = [
+  var SERVICOS_PRE = [
     { nome: "Selecione um serviço...", desc: "", unit: "", qtd: "" },
 
     { nome: "Higienização Split 9.000 a 12.000 BTUs", desc: "Higienização de ar-condicionado Split (9.000 a 12.000 BTUs)", unit: 180.00, qtd: 1 },
@@ -381,87 +379,84 @@
     { nome: "Instalação Split 18.000 a 24.000 BTUs", desc: "Instalação de ar-condicionado Split (18.000 a 24.000 BTUs)", unit: 850.00, qtd: 1 }
   ];
 
-  // =========================
-  // Estado
-  // =========================
-  const state = {
-    items: [], // {id, desc, qtd, unit, desconto}
+  // ===== Estado =====
+  var state = {
+    items: [],
     totalGeral: 0,
     lastPdfBlob: null,
-    lastPdfFilename: "Orcamento.pdf",
+    lastPdfFilename: "Orcamento.pdf"
   };
 
-  // =========================
-  // DOM helpers
-  // =========================
-  const $ = (sel, root = document) => root.querySelector(sel);
-  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
-
-  const dom = {
-    cliente: () => $("#cliente"),
-    telefone: () => $("#telefoneCliente"),
-    endereco: () => $("#enderecoCliente"),
-    pagamento: () => $("#pagamento"),
-    observacoes: () => $("#observacoes"),
-
-    descricao: () => $("#descricao"),
-    quantidade: () => $("#quantidade"),
-    valorUnitario: () => $("#valorUnitario"),
-    descontoServico: () => $("#descontoServico"),
-
-    tabelaBody: () => $("#tabela tbody"),
-    totalSpan: () => $("#total"),
-    itensCards: () => $("#itensCards"),
-
-    shareArea: () => $("#shareArea"),
-    btnShare: () => $("#btnShare"),
-    btnWhatsAppFallback: () => $("#btnWhatsAppFallback"),
-
-    btnAddServico: () => $("#btnAddServico"),
-    btnGerarPDF: () => $("#btnGerarPDF"),
-
-    servicoPronto: () => $("#servicoPronto"),
-    btnAplicarServico: () => $("#btnAplicarServico"),
-
-    btnToggleAdd: () => $("#btnToggleAdd"),
-    addForm: () => $("#addForm"),
-  };
-
-  // =========================
-  // Utils
-  // =========================
-  function uid() {
-    // id curto estável para identificar itens
-    return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(4);
+  // ===== DOM helpers =====
+  function qs(sel, root) {
+    return (root || document).querySelector(sel);
+  }
+  function qsa(sel, root) {
+    return Array.prototype.slice.call((root || document).querySelectorAll(sel));
   }
 
-  function clampMin(n, min) {
-    n = Number(n);
-    if (Number.isNaN(n)) return min;
-    return Math.max(min, n);
+  var dom = {
+    cliente: function () { return qs("#cliente"); },
+    telefone: function () { return qs("#telefoneCliente"); },
+    endereco: function () { return qs("#enderecoCliente"); },
+    pagamento: function () { return qs("#pagamento"); },
+    observacoes: function () { return qs("#observacoes"); },
+
+    descricao: function () { return qs("#descricao"); },
+    quantidade: function () { return qs("#quantidade"); },
+    valorUnitario: function () { return qs("#valorUnitario"); },
+    descontoServico: function () { return qs("#descontoServico"); },
+
+    tabelaBody: function () { return qs("#tabela tbody"); },
+    totalSpan: function () { return qs("#total"); },
+    itensCards: function () { return qs("#itensCards"); },
+
+    shareArea: function () { return qs("#shareArea"); },
+    btnShare: function () { return qs("#btnShare"); },
+    btnWhatsAppFallback: function () { return qs("#btnWhatsAppFallback"); },
+
+    btnAddServico: function () { return qs("#btnAddServico"); },
+    btnGerarPDF: function () { return qs("#btnGerarPDF"); },
+
+    servicoPronto: function () { return qs("#servicoPronto"); },
+    btnAplicarServico: function () { return qs("#btnAplicarServico"); },
+
+    btnToggleAdd: function () { return qs("#btnToggleAdd"); },
+    addForm: function () { return qs("#addForm"); }
+  };
+
+  // ===== Utils =====
+  function isMobile() {
+    return window.matchMedia && window.matchMedia("(max-width: " + CONFIG.MOBILE_BREAKPOINT + "px)").matches;
+  }
+
+  function safeFilename(name) {
+    var s = String(name || "Cliente").replace(/[\\/:*?"<>|]/g, "").trim();
+    return s || "Cliente";
   }
 
   function parseNum(value) {
-    // Aceita: number, "12.34", "12,34", "1.234,56", "1,234.56"
     if (typeof value === "number") return value;
-    const s = String(value ?? "").trim();
+    var s = String((value === null || value === undefined) ? "" : value).trim();
     if (!s) return 0;
 
-    let x = s.replace(/\s+/g, "");
-    const hasComma = x.includes(",");
-    const hasDot = x.includes(".");
+    var x = s.replace(/\s+/g, "");
+    var hasComma = x.indexOf(",") >= 0;
+    var hasDot = x.indexOf(".") >= 0;
+
     if (hasComma && hasDot) {
-      const lastComma = x.lastIndexOf(",");
-      const lastDot = x.lastIndexOf(".");
-      const decimalSep = lastComma > lastDot ? "," : ".";
-      const thousandSep = decimalSep === "," ? "." : ",";
+      var lastComma = x.lastIndexOf(",");
+      var lastDot = x.lastIndexOf(".");
+      var decimalSep = (lastComma > lastDot) ? "," : ".";
+      var thousandSep = (decimalSep === ",") ? "." : ",";
       x = x.split(thousandSep).join("");
       x = x.replace(decimalSep, ".");
     } else if (hasComma && !hasDot) {
       x = x.replace(",", ".");
     }
-    const n = Number(x);
-    return Number.isNaN(n) ? 0 : n;
+
+    var n = Number(x);
+    return isNaN(n) ? 0 : n;
   }
 
   function toFixed2(n) {
@@ -477,15 +472,30 @@
     }
   }
 
-  function safeFilename(name) {
-    return String(name || "Cliente").replace(/[\\/:*?"<>|]/g, "").trim() || "Cliente";
+  function clampMin(n, min) {
+    n = Number(n);
+    if (isNaN(n)) return min;
+    return Math.max(min, n);
   }
 
-    // ===== Currency mask (digita da direita pra esquerda) =====
+  function uid() {
+    return (Math.random().toString(36).slice(2, 10) + String(Date.now()).slice(-6));
+  }
+
+  function calcItem(it) {
+    var qtd = parseNum(it.qtd);
+    var unit = parseNum(it.unit);
+    var desconto = parseNum(it.desconto);
+    var total = qtd * unit;
+    var liquido = total - desconto;
+    return { total: total, liquido: liquido };
+  }
+
+  // ===== Máscara moeda (centavos) =====
   function formatBRLCentsFromDigits(digits) {
-    const d = (digits || "").replace(/\D+/g, "");
-    const n = d ? parseInt(d, 10) : 0; // centavos
-    const value = n / 100;
+    var d = String(digits || "").replace(/\D+/g, "");
+    var n = d ? parseInt(d, 10) : 0;
+    var value = n / 100;
     try {
       return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     } catch (e) {
@@ -493,255 +503,233 @@
     }
   }
 
-  function attachCurrencyMask(inputEl, { defaultValue = "0,00" } = {}) {
+  function attachCurrencyMask(inputEl, opts) {
     if (!inputEl) return;
-
-    function setFromDigits(d) {
-      inputEl.value = formatBRLCentsFromDigits(d);
-    }
+    var defaultValue = (opts && opts.defaultValue) ? opts.defaultValue : "0,00";
 
     function getDigits() {
       return String(inputEl.value || "").replace(/\D+/g, "");
     }
+    function setFromDigits(d) {
+      inputEl.value = formatBRLCentsFromDigits(d);
+      // cursor no fim
+      try {
+        var len = inputEl.value.length;
+        inputEl.setSelectionRange(len, len);
+      } catch (e) {}
+    }
 
     if (!inputEl.value) inputEl.value = defaultValue;
 
-    inputEl.addEventListener("focus", () => {
+    inputEl.addEventListener("focus", function () {
       if (!inputEl.value) inputEl.value = defaultValue;
-      try {
-        const len = inputEl.value.length;
-        inputEl.setSelectionRange(len, len);
-      } catch (e) {}
+      setFromDigits(getDigits());
     });
 
-    inputEl.addEventListener("input", () => {
-      const digits = getDigits();
-      setFromDigits(digits);
-      try {
-        const len = inputEl.value.length;
-        inputEl.setSelectionRange(len, len);
-      } catch (e) {}
+    inputEl.addEventListener("input", function () {
+      setFromDigits(getDigits());
     });
 
-    inputEl.addEventListener("keydown", (e) => {
+    inputEl.addEventListener("keydown", function (e) {
       if (e.key === "Backspace") {
         e.preventDefault();
-        const digits = getDigits();
+        var digits = getDigits();
         setFromDigits(digits.slice(0, -1));
         return;
       }
-      if (e.key.length === 1 && !/[0-9]/.test(e.key)) {
+      if (e.key && e.key.length === 1 && !/[0-9]/.test(e.key)) {
         if (e.key !== "," && e.key !== ".") e.preventDefault();
       }
     });
   }
 
-function isMobile() {
-    return window.matchMedia(`(max-width: ${CONFIG.MOBILE_BREAKPOINT}px)`).matches;
-  }
-
-  function calcItem(item) {
-    const qtd = parseNum(item.qtd);
-    const unit = parseNum(item.unit);
-    const desconto = parseNum(item.desconto);
-    const total = qtd * unit;
-    const liquido = total - desconto;
-    return { total, liquido };
-  }
-
-  // =========================
-  // CRUD de itens (fonte única)
-  // =========================
-  function addItem({ desc, qtd, unit, desconto }) {
-    const item = {
+  // ===== CRUD items =====
+  function addItem(payload) {
+    var it = {
       id: uid(),
-      desc: String(desc || "").trim(),
-      qtd: parseNum(qtd),
-      unit: parseNum(unit),
-      desconto: parseNum(desconto),
+      desc: String(payload.desc || "").trim(),
+      qtd: parseNum(payload.qtd),
+      unit: parseNum(payload.unit),
+      desconto: parseNum(payload.desconto)
     };
-    state.items.push(item);
+    state.items.push(it);
     recalcAndRender();
   }
 
   function removeItem(id) {
-    state.items = state.items.filter((it) => it.id !== id);
+    state.items = state.items.filter(function (x) { return x.id !== id; });
     recalcAndRender();
   }
 
   function updateItem(id, patch) {
-    const it = state.items.find((x) => x.id === id);
-    if (!it) return;
-    Object.assign(it, patch);
-    // normaliza números quando necessário
-    if (patch.qtd !== undefined) it.qtd = parseNum(it.qtd);
-    if (patch.unit !== undefined) it.unit = parseNum(it.unit);
-    if (patch.desconto !== undefined) it.desconto = parseNum(it.desconto);
+    var i;
+    for (i = 0; i < state.items.length; i++) {
+      if (state.items[i].id === id) {
+        if (patch.desc !== undefined) state.items[i].desc = String(patch.desc || "");
+        if (patch.qtd !== undefined) state.items[i].qtd = parseNum(patch.qtd);
+        if (patch.unit !== undefined) state.items[i].unit = parseNum(patch.unit);
+        if (patch.desconto !== undefined) state.items[i].desconto = parseNum(patch.desconto);
+        break;
+      }
+    }
     recalcAndRender();
   }
 
-  // =========================
-  // Cálculos + render
-  // =========================
+  // ===== Render =====
   function recalculateTotal() {
-    let total = 0;
-    state.items.forEach((it) => {
-      total += calcItem(it).liquido;
-    });
+    var total = 0;
+    for (var i = 0; i < state.items.length; i++) {
+      total += calcItem(state.items[i]).liquido;
+    }
     state.totalGeral = total;
-    dom.totalSpan().innerText = toFixed2(total);
+    var t = dom.totalSpan();
+    if (t) t.innerText = toFixed2(total);
   }
 
   function renderTable() {
-    const tbody = dom.tabelaBody();
+    var tbody = dom.tabelaBody();
     if (!tbody) return;
-
     tbody.innerHTML = "";
-    state.items.forEach((it) => {
-      const { total, liquido } = calcItem(it);
-      const row = tbody.insertRow();
+
+    for (var i = 0; i < state.items.length; i++) {
+      var it = state.items[i];
+      var c = calcItem(it);
+
+      var row = tbody.insertRow();
       row.dataset.id = it.id;
 
       row.insertCell(0).innerText = it.desc;
       row.cells[0].className = "desc";
-
       row.insertCell(1).innerText = String(it.qtd);
       row.insertCell(2).innerText = toFixed2(it.unit);
-      row.insertCell(3).innerText = toFixed2(total);
+      row.insertCell(3).innerText = toFixed2(c.total);
       row.insertCell(4).innerText = toFixed2(it.desconto);
-      row.insertCell(5).innerText = toFixed2(liquido);
+      row.insertCell(5).innerText = toFixed2(c.liquido);
 
-      const actionCell = row.insertCell(6);
-      const btn = document.createElement("button");
+      var actionCell = row.insertCell(6);
+      var btn = document.createElement("button");
       btn.className = "btn-remove";
       btn.type = "button";
       btn.innerText = "Remover";
-      btn.addEventListener("click", () => removeItem(it.id));
+      (function (id) {
+        btn.addEventListener("click", function () { removeItem(id); });
+      })(it.id);
       actionCell.appendChild(btn);
-    });
+    }
   }
 
   function renderCards() {
-    const wrap = dom.itensCards();
+    var wrap = dom.itensCards();
     if (!wrap) return;
-
     wrap.innerHTML = "";
 
-    state.items.forEach((it) => {
-      const { total, liquido } = calcItem(it);
+    for (var i = 0; i < state.items.length; i++) {
+      (function (it) {
+        var c = calcItem(it);
 
-      const card = document.createElement("div");
-      card.className = "item-card";
+        var card = document.createElement("div");
+        card.className = "item-card";
 
-      // Top row: select + trash
-      const top = document.createElement("div");
-      top.className = "top";
+        var top = document.createElement("div");
+        top.className = "top";
 
-      const sel = document.createElement("select");
-      sel.className = "item-select";
+        var sel = document.createElement("select");
+        sel.className = "item-select";
 
-      const optCustom = document.createElement("option");
-      optCustom.value = "-1";
-      optCustom.textContent = it.desc || "Item";
-      sel.appendChild(optCustom);
+        var optCustom = document.createElement("option");
+        optCustom.value = "-1";
+        optCustom.textContent = it.desc || "Item";
+        sel.appendChild(optCustom);
 
-      SERVICOS_PRE.forEach((s, idx) => {
-        if (idx === 0) return;
-        const opt = document.createElement("option");
-        opt.value = String(idx);
-        opt.textContent = s.nome;
-        if (it.desc && (it.desc.includes(s.nome) || it.desc === s.desc)) opt.selected = true;
-        sel.appendChild(opt);
-      });
+        for (var k = 1; k < SERVICOS_PRE.length; k++) {
+          var s = SERVICOS_PRE[k];
+          var opt = document.createElement("option");
+          opt.value = String(k);
+          opt.textContent = s.nome;
+          if (it.desc && (it.desc.indexOf(s.nome) >= 0 || it.desc === s.desc)) opt.selected = true;
+          sel.appendChild(opt);
+        }
 
-      const del = document.createElement("button");
-      del.type = "button";
-      del.className = "icon-btn";
-      del.setAttribute("aria-label", "Remover item");
-      del.innerHTML = "🗑️";
-      del.addEventListener("click", () => removeItem(it.id));
+        var del = document.createElement("button");
+        del.type = "button";
+        del.className = "icon-btn";
+        del.setAttribute("aria-label", "Remover item");
+        del.innerHTML = "🗑️";
+        del.addEventListener("click", function () { removeItem(it.id); });
 
-      top.appendChild(sel);
-      top.appendChild(del);
+        top.appendChild(sel);
+        top.appendChild(del);
 
-      // Row 2: money + stepper
-      const row2 = document.createElement("div");
-      row2.className = "row2";
+        var row2 = document.createElement("div");
+        row2.className = "row2";
 
-      const money = document.createElement("div");
-      money.className = "money-input";
+        var money = document.createElement("div");
+        money.className = "money-input";
 
-      const prefix = document.createElement("span");
-      prefix.className = "prefix";
-      prefix.textContent = CONFIG.CURRENCY_PREFIX;
+        var prefix = document.createElement("span");
+        prefix.className = "prefix";
+        prefix.textContent = CONFIG.CURRENCY_PREFIX;
 
-      const moneyInput = document.createElement("input");
-      moneyInput.type = "text";
-      moneyInput.inputMode = "decimal";
-      moneyInput.value = fmtBR(it.unit);
-
-      moneyInput.addEventListener("change", () => {
-        updateItem(it.id, { unit: parseNum(moneyInput.value) });
-      });
-
-      money.appendChild(prefix);
-      money.appendChild(moneyInput);
-
-      const step = document.createElement("div");
-      step.className = "qty-stepper";
-
-      const btnMinus = document.createElement("button");
-      btnMinus.type = "button";
-      btnMinus.textContent = "−";
-      btnMinus.addEventListener("click", () => {
-        updateItem(it.id, { qtd: clampMin(it.qtd - 1, 1) });
-      });
-
-      const mid = document.createElement("span");
-      mid.textContent = String(it.qtd);
-
-      const btnPlus = document.createElement("button");
-      btnPlus.type = "button";
-      btnPlus.textContent = "+";
-      btnPlus.addEventListener("click", () => {
-        updateItem(it.id, { qtd: clampMin(it.qtd + 1, 1) });
-      });
-
-      step.appendChild(btnMinus);
-      step.appendChild(mid);
-      step.appendChild(btnPlus);
-
-      row2.appendChild(money);
-      row2.appendChild(step);
-
-      // Meta
-      const meta = document.createElement("div");
-      meta.className = "meta";
-      meta.innerHTML =
-        `<span>Total: <b>${CONFIG.CURRENCY_PREFIX} ${fmtBR(total)}</b></span>
-         <span>Desc: <b>${CONFIG.CURRENCY_PREFIX} ${fmtBR(it.desconto)}</b></span>
-         <span>Líquido: <b>${CONFIG.CURRENCY_PREFIX} ${fmtBR(liquido)}</b></span>`;
-
-      // Aplicar serviço pronto pelo select do card
-      sel.addEventListener("change", () => {
-        const idx = parseInt(sel.value, 10);
-        if (Number.isNaN(idx) || idx < 1) return;
-        const s = SERVICOS_PRE[idx];
-        if (!s) return;
-        updateItem(it.id, {
-          desc: s.desc || s.nome,
-          unit: Number(s.unit || 0),
-          // mantém qtd atual se existir, senão usa o padrão do serviço
-          qtd: clampMin(it.qtd || (s.qtd ?? 1), 1),
+        var moneyInput = document.createElement("input");
+        moneyInput.type = "text";
+        moneyInput.inputMode = "decimal";
+        moneyInput.value = fmtBR(it.unit);
+        moneyInput.addEventListener("change", function () {
+          updateItem(it.id, { unit: parseNum(moneyInput.value) });
         });
-      });
 
-      card.appendChild(top);
-      card.appendChild(row2);
-      card.appendChild(meta);
+        money.appendChild(prefix);
+        money.appendChild(moneyInput);
 
-      wrap.appendChild(card);
-    });
+        var step = document.createElement("div");
+        step.className = "qty-stepper";
+
+        var btnMinus = document.createElement("button");
+        btnMinus.type = "button";
+        btnMinus.textContent = "−";
+        btnMinus.addEventListener("click", function () {
+          updateItem(it.id, { qtd: clampMin(it.qtd - 1, 1) });
+        });
+
+        var mid = document.createElement("span");
+        mid.textContent = String(it.qtd);
+
+        var btnPlus = document.createElement("button");
+        btnPlus.type = "button";
+        btnPlus.textContent = "+";
+        btnPlus.addEventListener("click", function () {
+          updateItem(it.id, { qtd: clampMin(it.qtd + 1, 1) });
+        });
+
+        step.appendChild(btnMinus);
+        step.appendChild(mid);
+        step.appendChild(btnPlus);
+
+        row2.appendChild(money);
+        row2.appendChild(step);
+
+        var meta = document.createElement("div");
+        meta.className = "meta";
+        meta.innerHTML =
+          '<span>Total: <b>' + CONFIG.CURRENCY_PREFIX + ' ' + fmtBR(c.total) + '</b></span>' +
+          '<span>Desc: <b>' + CONFIG.CURRENCY_PREFIX + ' ' + fmtBR(it.desconto) + '</b></span>' +
+          '<span>Líquido: <b>' + CONFIG.CURRENCY_PREFIX + ' ' + fmtBR(c.liquido) + '</b></span>';
+
+        sel.addEventListener("change", function () {
+          var idx = parseInt(sel.value, 10);
+          if (isNaN(idx) || idx < 1) return;
+          var s = SERVICOS_PRE[idx];
+          if (!s) return;
+          updateItem(it.id, { desc: s.desc || s.nome, unit: Number(s.unit || 0), qtd: clampMin(it.qtd || (s.qtd || 1), 1) });
+        });
+
+        card.appendChild(top);
+        card.appendChild(row2);
+        card.appendChild(meta);
+
+        wrap.appendChild(card);
+      })(state.items[i]);
+    }
   }
 
   function recalcAndRender() {
@@ -750,91 +738,120 @@ function isMobile() {
     renderCards();
   }
 
-  // =========================
-  // Serviços prontos (bloco oculto - ainda funciona)
-  // =========================
+  // ===== Serviços prontos (select) =====
   function popularServicosProntos() {
-    const sel = dom.servicoPronto();
+    var sel = dom.servicoPronto();
     if (!sel) return;
     sel.innerHTML = "";
-    SERVICOS_PRE.forEach((s, idx) => {
-      const opt = document.createElement("option");
-      opt.value = String(idx);
-      opt.textContent = s.nome;
+    for (var i = 0; i < SERVICOS_PRE.length; i++) {
+      var opt = document.createElement("option");
+      opt.value = String(i);
+      opt.textContent = SERVICOS_PRE[i].nome;
       sel.appendChild(opt);
-    });
+    }
   }
 
-  function aplicarServicoSelecionado() {
-    const sel = dom.servicoPronto();
+  function adicionarServicoPronto() {
+    var sel = dom.servicoPronto();
     if (!sel) return;
-    const idx = parseInt(sel.value, 10);
-    const s = SERVICOS_PRE[idx];
+    var idx = parseInt(sel.value, 10);
+    var s = SERVICOS_PRE[idx];
     if (!s || !s.desc) return;
 
+    // preenche form
     dom.descricao().value = s.desc;
-    dom.valorUnitario().value = (typeof s.unit === "number" ? s.unit.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0,00");
-    dom.quantidade().value = (s.qtd ?? 1);
+    dom.quantidade().value = s.qtd || 1;
+    dom.valorUnitario().value = fmtBR(s.unit || 0);
     dom.descontoServico().value = "0,00";
+
+    // adiciona item
+    addItem({ desc: s.desc, qtd: s.qtd || 1, unit: Number(s.unit || 0), desconto: 0 });
+
+    // abre formulário no mobile
+    var form = dom.addForm();
+    if (form) form.classList.add("open");
   }
 
-  // =========================
-  // Adicionar item (form)
-  // =========================
+  // ===== Adicionar manual =====
   function addServicoFromForm() {
-    const desc = dom.descricao().value.trim();
-    const qtd = parseNum(dom.quantidade().value);
-    const unit = parseNum(dom.valorUnitario().value);
-    const desconto = parseNum(dom.descontoServico().value);
+    var desc = String(dom.descricao().value || "").trim();
+    var qtd = parseNum(dom.quantidade().value);
+    var unit = parseNum(dom.valorUnitario().value);
+    var desconto = parseNum(dom.descontoServico().value);
 
     if (!desc || !qtd || !unit) return;
 
-    addItem({ desc, qtd, unit, desconto });
+    addItem({ desc: desc, qtd: qtd, unit: unit, desconto: desconto });
 
     dom.descricao().value = "";
     dom.quantidade().value = "";
-    dom.valorUnitario().value = "";
-    dom.descontoServico().value = 0;
+    dom.valorUnitario().value = "0,00";
+    dom.descontoServico().value = "0,00";
   }
 
-  // =========================
-  // Share / WhatsApp
-  // =========================
-  async function sharePdf() {
+  // ===== Tabs =====
+  function initTabs() {
+    var btns = qsa(".tab-btn");
+    if (!btns.length) return;
+
+    var panes = qsa(".tab-pane");
+
+    function activate(id) {
+      btns.forEach(function (b) {
+        if (b.classList && b.classList.toggle) b.classList.toggle("active", b.getAttribute("data-tab") === id);
+      });
+      panes.forEach(function (p) {
+        if (p.classList && p.classList.toggle) p.classList.toggle("active", p.id === id);
+      });
+      if (id === "tab-prontos") {
+        var form = dom.addForm();
+        if (form) form.classList.add("open");
+      }
+    }
+
+    btns.forEach(function (b) {
+      b.addEventListener("click", function () {
+        activate(b.getAttribute("data-tab"));
+      });
+    });
+
+    activate("tab-add");
+  }
+
+  // ===== Share =====
+  function openWhatsAppFallback() {
+    var cliente = (dom.cliente().value || "Cliente");
+    var msg = encodeURIComponent("Olá, " + cliente + "! Segue o orçamento em PDF. (Anexo)");
+    window.open("https://wa.me/?text=" + msg, "_blank");
+  }
+
+  function sharePdf() {
     if (!state.lastPdfBlob) {
       alert("Gere o PDF antes de compartilhar.");
       return;
     }
-
-    const file = new File([state.lastPdfBlob], state.lastPdfFilename, { type: "application/pdf" });
-
-    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({ title: "Orçamento RE Climatização", text: "Segue o orçamento em PDF.", files: [file] });
-      } catch (e) {}
-    } else {
-      alert("Seu navegador não suporta compartilhar arquivo direto. Use o botão 'Abrir WhatsApp (mensagem)' e anexe o PDF manualmente.");
+    try {
+      var file = new File([state.lastPdfBlob], state.lastPdfFilename, { type: "application/pdf" });
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ title: "Orçamento", text: "Segue o orçamento em PDF.", files: [file] })["catch"](function(){});
+      } else {
+        alert("Seu navegador não suporta compartilhar arquivo direto. Use o WhatsApp e anexe o PDF manualmente.");
+      }
+    } catch (e) {
+      alert("Compartilhamento não disponível neste aparelho. Anexe o PDF manualmente no WhatsApp.");
     }
   }
 
-  function openWhatsAppFallback() {
-    const cliente = dom.cliente().value || "Cliente";
-    const msg = encodeURIComponent(`Olá, ${cliente}! Segue o orçamento em PDF. (Anexo)`);
-    window.open(`https://wa.me/?text=${msg}`, "_blank");
-  }
-
-  // =========================
-  // PDF
-  // =========================
+  // ===== PDF =====
   function loadImageAsDataURL(src) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
       img.crossOrigin = "anonymous";
       img.onload = function () {
-        const canvas = document.createElement("canvas");
+        var canvas = document.createElement("canvas");
         canvas.width = img.width;
         canvas.height = img.height;
-        const ctx = canvas.getContext("2d");
+        var ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0);
         try { resolve(canvas.toDataURL("image/png")); }
         catch (err) { reject(err); }
@@ -845,237 +862,202 @@ function isMobile() {
   }
 
   function getBodyForPdf() {
-    return state.items.map((it) => {
-      const { total, liquido } = calcItem(it);
-      return [
-        it.desc,
-        String(it.qtd),
-        toFixed2(it.unit),
-        toFixed2(total),
-        toFixed2(it.desconto),
-        toFixed2(liquido),
-      ];
+    return state.items.map(function (it) {
+      var c = calcItem(it);
+      return [it.desc, String(it.qtd), toFixed2(it.unit), toFixed2(c.total), toFixed2(it.desconto), toFixed2(c.liquido)];
     });
   }
 
-  async function gerarPdf() {
+  function gerarPdf() {
     if (state.totalGeral === 0) {
       alert("Adicione pelo menos um serviço.");
       return;
     }
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-
-    const pageW = doc.internal.pageSize.getWidth();
-    const margin = CONFIG.PDF.margin;
-    const centerX = pageW / 2;
-
-    const cliente = dom.cliente().value;
-    const telefone = dom.telefone().value;
-    const endereco = dom.endereco().value;
-    const pagamento = dom.pagamento().value;
-    const obs = dom.observacoes().value;
-    const data = new Date().toLocaleDateString();
-
-    let logoDataUrl = null;
-    try { logoDataUrl = await loadImageAsDataURL(CONFIG.PDF.logoPath); } catch (e) { logoDataUrl = null; }
-
-    if (logoDataUrl) {
-      doc.addImage(logoDataUrl, "PNG", 15, 8, 100, 40);
+    var jsPDF = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : null;
+    if (!jsPDF) {
+      alert("jsPDF não carregou.");
+      return;
     }
 
-    const lineY = 52;
-    const propostaY = 49;
+    var doc = new jsPDF();
+    var pageW = doc.internal.pageSize.getWidth();
+    var margin = CONFIG.PDF.margin;
+    var centerX = pageW / 2;
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(13);
-    doc.setTextColor(0, 0, 0);
-    doc.text(CONFIG.PDF.proposalTitle, centerX, propostaY, { align: "center" });
+    var cliente = dom.cliente().value;
+    var telefone = dom.telefone().value;
+    var endereco = dom.endereco().value;
+    var pagamento = dom.pagamento().value;
+    var obs = dom.observacoes().value;
+    var data = (new Date()).toLocaleDateString();
 
-    doc.setDrawColor(...CONFIG.PDF.lineBlue);
-    doc.setLineWidth(1);
-    doc.line(margin, lineY, pageW - margin, lineY);
+    loadImageAsDataURL(CONFIG.PDF.logoPath).then(function (logoDataUrl) {
+      if (logoDataUrl) doc.addImage(logoDataUrl, "PNG", 15, 8, 100, 40);
 
-    let y = 65;
-    doc.setFillColor(...CONFIG.PDF.boxBlue);
-    doc.roundedRect(12, y - 7, pageW - 24, 22, 3, 3, "F");
+      var lineY = 52;
+      var propostaY = 49;
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.setTextColor(0, 0, 0);
-    doc.text("Cliente:", margin, y);
-
-    doc.setFont("helvetica", "normal");
-    doc.text(cliente || "-", margin + 25, y);
-
-    y += 7;
-    doc.setTextColor(90, 90, 90);
-    doc.text("Telefone: " + (telefone || "-"), margin, y);
-
-    y += 7;
-    doc.text("Endereço: " + (endereco || "-"), margin, y);
-
-    y += 12;
-
-    doc.autoTable({
-      startY: y,
-      head: [["Descrição", "Qtd", "Unit", "Total", "Desc", "Líquido"]],
-      body: getBodyForPdf(),
-      theme: "plain",
-      styles: { fontSize: 10, cellPadding: 3 },
-      didDrawCell: function (data) {
-        if (data.section === "head" || data.section === "body") {
-          doc.setDrawColor(210, 210, 210);
-          doc.setLineWidth(0.5);
-          doc.line(data.cell.x, data.cell.y + data.cell.height, data.cell.x + data.cell.width, data.cell.y + data.cell.height);
-        }
-      },
-      columnStyles: {
-        1: { halign: "right" },
-        2: { halign: "right" },
-        3: { halign: "right" },
-        4: { halign: "right" },
-        5: { halign: "right" },
-      },
-    });
-
-    y = doc.lastAutoTable.finalY + 10;
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.setTextColor(0, 0, 0);
-    doc.text(`Total Geral: ${CONFIG.CURRENCY_PREFIX} ${toFixed2(state.totalGeral)}`, pageW - margin, y, { align: "right" });
-    y += 10;
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.setTextColor(0, 0, 0);
-
-    const label = "Forma de Pagamento:";
-    const labelX = margin;
-    doc.text(label, labelX, y);
-
-    const labelW = doc.getTextWidth(label);
-    const valueX = labelX + labelW + 4;
-
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(90, 90, 90);
-    doc.text(pagamento || "-", valueX, y);
-    y += 12;
-
-    if (obs) {
       doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
       doc.setTextColor(0, 0, 0);
-      doc.text("Observações:", margin, y);
-      y += 6;
+      doc.text(CONFIG.PDF.proposalTitle, centerX, propostaY, { align: "center" });
+
+      doc.setDrawColor(CONFIG.PDF.lineBlue[0], CONFIG.PDF.lineBlue[1], CONFIG.PDF.lineBlue[2]);
+      doc.setLineWidth(1);
+      doc.line(margin, lineY, pageW - margin, lineY);
+
+      var y = 65;
+      doc.setFillColor(CONFIG.PDF.boxBlue[0], CONFIG.PDF.boxBlue[1], CONFIG.PDF.boxBlue[2]);
+      doc.roundedRect(12, y - 7, pageW - 24, 22, 3, 3, "F");
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(0, 0, 0);
+      doc.text("Cliente:", margin, y);
+
+      doc.setFont("helvetica", "normal");
+      doc.text(cliente || "-", margin + 25, y);
+
+      y += 7;
+      doc.setTextColor(90, 90, 90);
+      doc.text("Telefone: " + (telefone || "-"), margin, y);
+
+      y += 7;
+      doc.text("Endereço: " + (endereco || "-"), margin, y);
+
+      y += 12;
+
+      if (!doc.autoTable) {
+        alert("autoTable não carregou.");
+        return;
+      }
+
+      doc.autoTable({
+        startY: y,
+        head: [["Descrição", "Qtd", "Unit", "Total", "Desc", "Líquido"]],
+        body: getBodyForPdf(),
+        theme: "plain",
+        styles: { fontSize: 10, cellPadding: 3 },
+        didDrawCell: function (dataCell) {
+          if (dataCell.section === "head" || dataCell.section === "body") {
+            doc.setDrawColor(210, 210, 210);
+            doc.setLineWidth(0.5);
+            doc.line(dataCell.cell.x, dataCell.cell.y + dataCell.cell.height, dataCell.cell.x + dataCell.cell.width, dataCell.cell.y + dataCell.cell.height);
+          }
+        },
+        columnStyles: { 1: { halign: "right" }, 2: { halign: "right" }, 3: { halign: "right" }, 4: { halign: "right" }, 5: { halign: "right" } }
+      });
+
+      y = doc.lastAutoTable.finalY + 10;
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(0, 0, 0);
+      doc.text("Total Geral: " + CONFIG.CURRENCY_PREFIX + " " + toFixed2(state.totalGeral), pageW - margin, y, { align: "right" });
+      y += 10;
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(0, 0, 0);
+
+      var label = "Forma de Pagamento:";
+      doc.text(label, margin, y);
 
       doc.setFont("helvetica", "normal");
       doc.setTextColor(90, 90, 90);
-      const linhas = doc.splitTextToSize(obs, pageW - (margin * 2));
-      doc.text(linhas, margin, y);
-      y += (linhas.length * 5) + 10;
-    } else {
-      y += 6;
-    }
+      doc.text(pagamento || "-", margin + doc.getTextWidth(label) + 4, y);
+      y += 12;
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.setTextColor(90, 90, 90);
-    doc.text("Data: " + data, margin, y);
-    y += 18;
-      // Assinatura removida (pedido do usuário)
+      if (obs) {
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(0, 0, 0);
+        doc.text("Observações:", margin, y);
+        y += 6;
 
-    state.lastPdfFilename = CONFIG.FILENAME_PREFIX + safeFilename(cliente) + ".pdf";
-    state.lastPdfBlob = doc.output("blob");
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(90, 90, 90);
+        var linhas = doc.splitTextToSize(obs, pageW - (margin * 2));
+        doc.text(linhas, margin, y);
+        y += (linhas.length * 5) + 10;
+      } else {
+        y += 6;
+      }
 
-    doc.save(state.lastPdfFilename);
-    dom.shareArea().style.display = "block";
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(90, 90, 90);
+      doc.text("Data: " + data, margin, y);
+
+      // assinatura removida (pedido)
+      state.lastPdfFilename = CONFIG.FILENAME_PREFIX + safeFilename(cliente) + ".pdf";
+      state.lastPdfBlob = doc.output("blob");
+
+      doc.save(state.lastPdfFilename);
+      var sa = dom.shareArea();
+      if (sa) sa.style.display = "block";
+    })["catch"](function () {
+      // sem logo
+      state.lastPdfFilename = CONFIG.FILENAME_PREFIX + safeFilename(dom.cliente().value) + ".pdf";
+      alert("Não foi possível carregar o logo. O PDF será gerado sem logo.");
+    });
   }
 
-  // =========================
-  // Mobile UX
-  // =========================
+  // ===== Mobile UX (sem resize) =====
   function initMobileAddToggle() {
-    const btn = dom.btnToggleAdd();
-    const form = dom.addForm();
+    var form = dom.addForm();
+    if (form && !isMobile()) form.classList.add("open");
+    var btn = dom.btnToggleAdd();
     if (!btn || !form) return;
 
-    function sync() {
-      if (isMobile()) form.classList.remove("open");
-      else form.classList.add("open");
-    }
-
-    sync();
-    window.addEventListener("resize", sync);
-
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", function () {
       form.classList.toggle("open");
       if (form.classList.contains("open")) {
-        const el = dom.descricao();
-        try { el && el.focus(); } catch (e) {}
+        var el = dom.descricao();
+        try { if (el) el.focus(); } catch (e) {}
         try { form.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {}
       }
     });
   }
 
-    // =========================
-  // Tabs (Serviços)
-  // =========================
-  function initTabs() {
-    const btns = $$(".tab-btn");
-    if (!btns.length) return;
-
-    const panes = $$(".tab-pane");
-    function activate(id) {
-      btns.forEach(b => b.classList.toggle("active", b.dataset.tab === id));
-      panes.forEach(p => p.classList.toggle("active", p.id === id));
-
-      // quando entrar em "serviços prontos", abre o formulário para receber os dados
-      if (id === "tab-prontos") {
-        const form = dom.addForm();
-        if (form) form.classList.add("open");
-      }
-    }
-
-    btns.forEach((b) => b.addEventListener("click", () => activate(b.dataset.tab)));
-
-    activate("tab-add");
-  }
-
-// =========================
-  // PWA
-  // =========================
+  // ===== PWA =====
   function initPWA() {
     if (!("serviceWorker" in navigator)) return;
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("./sw.js")["catch"](function () {});
     });
   }
 
-  // =========================
-  // Init
-  // =========================
+  // ===== Init =====
   function bindEvents() {
-    dom.btnAddServico()?.addEventListener("click", addServicoFromForm);
-    dom.btnShare()?.addEventListener("click", sharePdf);
-    dom.btnWhatsAppFallback()?.addEventListener("click", openWhatsAppFallback);
-    dom.btnGerarPDF()?.addEventListener("click", gerarPdf);
+    var el;
 
-    dom.btnAplicarServico()?.addEventListener("click", aplicarServicoSelecionado);
-    dom.servicoPronto()?.addEventListener("change", aplicarServicoSelecionado);
+    el = dom.btnAddServico();
+    if (el) el.addEventListener("click", addServicoFromForm);
+
+    el = dom.btnShare();
+    if (el) el.addEventListener("click", sharePdf);
+
+    el = dom.btnWhatsAppFallback();
+    if (el) el.addEventListener("click", openWhatsAppFallback);
+
+    el = dom.btnGerarPDF();
+    if (el) el.addEventListener("click", gerarPdf);
+
+    el = dom.btnAplicarServico();
+    if (el) el.addEventListener("click", adicionarServicoPronto);
+
+    el = dom.servicoPronto();
+    if (el) el.addEventListener("change", function () { /* só seleção */ });
   }
 
   function init() {
     popularServicosProntos();
+    initTabs();
     bindEvents();
-
-    // Máscara de moeda no formulário
+    initMobileAddToggle();
     attachCurrencyMask(dom.valorUnitario(), { defaultValue: "0,00" });
     attachCurrencyMask(dom.descontoServico(), { defaultValue: "0,00" });
-
-    initTabs();
-    initMobileAddToggle();
     initPWA();
     recalcAndRender();
   }
