@@ -26,6 +26,93 @@
     }
     formatCurrencyInputs();
 
+
+    // ===== UX: Serviços prontos + Adicionar item (mobile/desktop) =====
+    (function(){
+      const selSrv = document.getElementById("servicoPronto");
+      const btnApply = document.getElementById("btnAplicarServico");
+      const btnAdd = document.getElementById("btnToggleAdd");
+      const form = document.getElementById("addForm");
+
+      function clearForm(){
+        const descEl = document.getElementById("descricao");
+        const qtdEl  = document.getElementById("quantidade");
+        const unitEl = document.getElementById("valorUnitario");
+        const desEl  = document.getElementById("descontoServico");
+        if(descEl) descEl.value = "";
+        if(qtdEl)  qtdEl.value  = "";
+        if(unitEl) unitEl.value = "";
+        if(desEl)  desEl.value  = "0,00";
+      }
+
+      function openForm(){
+        if(!form) return;
+        form.classList.add("open");
+        try{ form.scrollIntoView({behavior:"smooth", block:"start"}); }catch(e){}
+      }
+
+      function syncApplyBtn(){
+        if(!selSrv || !btnApply) return;
+        const has = (selSrv.value && selSrv.value !== "0");
+        btnApply.disabled = !has;
+        btnApply.style.opacity = btnApply.disabled ? "0.6" : "1";
+      }
+
+      // Apply serviço -> preenche campos (editável)
+      if(selSrv && btnApply){
+        selSrv.addEventListener("change", syncApplyBtn);
+        syncApplyBtn();
+
+        btnApply.addEventListener("click", () => {
+          const rawVal = selSrv.value || "0";
+          if(rawVal === "0") return;
+
+          // tenta achar no array (por nome/desc). Se não achar, usa o texto do select mesmo.
+          let s = null;
+          if(typeof SERVICOS_PRE !== "undefined" && Array.isArray(SERVICOS_PRE)){
+            s = SERVICOS_PRE.find(x => (x?.nome === rawVal) || (x?.desc === rawVal)) || null;
+          }
+
+          const descEl = document.getElementById("descricao");
+          const qtdEl  = document.getElementById("quantidade");
+          const unitEl = document.getElementById("valorUnitario");
+          const desEl  = document.getElementById("descontoServico");
+
+          if(descEl) descEl.value = (s?.desc || s?.nome || rawVal).toString();
+          if(qtdEl)  qtdEl.value  = String(s?.qtd ?? 1);
+          if(unitEl) unitEl.value = formatMoneyBR(Number(s?.unit ?? 0));
+          if(desEl)  desEl.value  = "0,00";
+
+          openForm();
+        });
+      }
+
+      // Botão "ADICIONAR ITEM" -> abre em branco
+      if(btnAdd && form){
+        function syncFormByViewport(){
+          // Desktop sempre aberto; mobile começa fechado
+          if(window.matchMedia("(max-width: 768px)").matches){
+            form.classList.remove("open");
+          }else{
+            form.classList.add("open");
+          }
+        }
+        syncFormByViewport();
+        window.addEventListener("resize", syncFormByViewport);
+
+        btnAdd.addEventListener("click", () => {
+          // limpa e abre em branco
+          clearForm();
+          if(selSrv) { selSrv.value = "0"; syncApplyBtn(); }
+          openForm();
+          try{
+            const first = document.getElementById("descricao") || document.getElementById("quantidade");
+            first && first.focus();
+          }catch(e){}
+        });
+      }
+    })();
+
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <style>
@@ -657,61 +744,7 @@ function loadImageAsDataURL(src){
 
     
 
-    (function(){
-      const sel = document.getElementById("servicoPronto");
-      const btn = document.getElementById("btnAplicarServico");
-      if(!sel || !btn) return;
-
-      function syncBtn(){
-        const idx = parseInt(sel.value || "0", 10);
-        btn.disabled = !(idx > 0);
-        btn.style.opacity = btn.disabled ? "0.6" : "1";
-      }
-      sel.addEventListener("change", syncBtn);
-      syncBtn();
-
-      btn.addEventListener("click", () => {
-
-        // sempre abre em branco
-        const descEl = document.getElementById("descricao");
-        const qtdEl  = document.getElementById("quantidade");
-        const unitEl = document.getElementById("valorUnitario");
-        const desEl  = document.getElementById("descontoServico");
-        const selEl  = document.getElementById("servicoPronto");
-        if(descEl) descEl.value = "";
-        if(qtdEl)  qtdEl.value  = "";
-        if(unitEl) unitEl.value = "";
-        if(desEl)  desEl.value  = "0,00";
-        if(selEl)  selEl.value  = "0";
-        const rawVal = sel.value || "0";
-        const idx = parseInt(rawVal, 10);
-        let s = null;
-        if(typeof SERVICOS_PRE !== "undefined"){
-          if(!isNaN(idx)) s = SERVICOS_PRE[idx];
-          if(!s && rawVal && rawVal !== "0"){
-            s = SERVICOS_PRE.find(x => (x?.nome === rawVal) || (x?.desc === rawVal)) || null;
-          }
-        }
-        if(!s) return;
-
-        const descEl = document.getElementById("descricao");
-        const qtdEl  = document.getElementById("quantidade");
-        const unitEl = document.getElementById("valorUnitario");
-        const desEl  = document.getElementById("descontoServico");
-
-        if(descEl) descEl.value = (s.desc || s.nome || "").toString();
-        if(qtdEl)  qtdEl.value  = String(s.qtd ?? 1);
-        if(unitEl) unitEl.value = formatMoneyBR(Number(s.unit ?? 0));
-        if(desEl)  desEl.value  = formatMoneyBR(0);
-
-        const form = document.getElementById("addForm");
-        if(form){
-          form.classList.add("open");
-          try{ form.scrollIntoView({behavior:"smooth", block:"start"}); }catch(e){}
-        }
-      });
-    })();
-
+    
 document.getElementById("btnAplicarServico").addEventListener("click", aplicarServicoSelecionado);
 
     // bônus: ao trocar o select, já aplica automaticamente
@@ -758,33 +791,8 @@ document.getElementById("btnAplicarServico").addEventListener("click", aplicarSe
     });
 
     // Mobile: botão "ADICIONAR ITEM" abre/fecha o formulário
-    (function(){
-      const btn = document.getElementById("btnToggleAdd");
-      const form = document.getElementById("addForm");
-      if(!btn || !form) return;
-
-      function sync(){
-        if(window.matchMedia("(max-width: 768px)").matches){
-          form.classList.remove("open");
-        }else{
-          form.classList.add("open");
-        }
-      }
-      sync();
-      window.addEventListener("resize", sync);
-
-      btn.addEventListener("click", () => {
-        form.classList.toggle("open");
-        if(form.classList.contains("open")){
-          const el = document.getElementById("servicoPronto") || document.getElementById("descricao");
-          try{ el && el.focus(); }catch(e){}
-          try{ form.scrollIntoView({ behavior:"smooth", block:"start" }); }catch(e){}
-        }
-      });
-    })();
-
-
-    // compartilhar
+    
+// compartilhar
     document.getElementById("btnShare").addEventListener("click", async function(){
       if(!lastPdfBlob){
         alert("Gere o PDF antes de compartilhar.");
