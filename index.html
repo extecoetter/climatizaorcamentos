@@ -30,7 +30,21 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <style>
     
-    /* ===== Premium look ===== */
+    
+    .servicos-prontos-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .servicos-prontos-head .hint{
+      color:var(--muted);
+      font-weight:800;
+      font-size:12px;
+    }
+
+/* ===== Premium look ===== */
     :root{
       --bg:#f6f8fc;
       --card:#ffffff;
@@ -291,8 +305,29 @@ body{ margin:0; font-family:Arial, sans-serif; background:#f4f6f9; }
 <div class="card">
 <h2>Serviços</h2>
 <!-- ✅ Serviços pré-configurados -->
-<div id="servicosProntosBlock"><label>Serviços prontos</label>
-<select id="servicoPronto"></select>
+<div id="servicosProntosBlock">
+  <div class="servicos-prontos-head">
+    <label>Serviços prontos</label>
+    <span class="hint">Escolha e clique em Aplicar</span>
+  </div>
+  <select id="servicoPronto">
+
+<option value="0">Selecione um serviço...</option>
+<option value="Higienização Split 9.000 a 12.000 BTUs">Higienização Split 9.000 a 12.000 BTUs</option>
+<option value="Higienização Split 18.000 a 24.000 BTUs">Higienização Split 18.000 a 24.000 BTUs</option>
+<option value="Instalação Split até 12.000 BTUs">Instalação Split até 12.000 BTUs</option>
+<option value="Visita Técnica / Diagnóstico">Visita Técnica / Diagnóstico</option>
+<option value="Instalação Multi-Split (por evaporadora)">Instalação Multi-Split (por evaporadora)</option>
+<option value="Desinstalação de Equipamento">Desinstalação de Equipamento</option>
+<option value="Limpeza Química (desmontagem e lavagem)">Limpeza Química (desmontagem e lavagem)</option>
+<option value="Carga de Gás">Carga de Gás</option>
+<option value="Troca de Componente eletrônico">Troca de Componente eletrônico</option>
+<option value="Teste de Estanquidade">Teste de Estanquidade</option>
+<option value="Vácuo no Sistema">Vácuo no Sistema</option>
+<option value="Infra Estrutura">Infra Estrutura</option>
+<option value="Instalação/Manutenção Bomba de Dreno">Instalação/Manutenção Bomba de Dreno</option>
+
+</select>
 <button class="secondary" id="btnAplicarServico" type="button">Aplicar serviço selecionado</button></div>
 <hr style="border:none;border-top:1px solid #e5e7eb;margin:12px 0;"/>
 <button class="btn-dashed" id="btnToggleAdd" type="button"><span class="plus">+</span>ADICIONAR ITEM</button>
@@ -590,13 +625,16 @@ function loadImageAsDataURL(src){
     // ✅ Monta o select de serviços prontos
     function popularServicosProntos(){
       const sel = document.getElementById("servicoPronto");
-      sel.innerHTML = "";
-      SERVICOS_PRE.forEach((s, idx) => {
+      if(!sel) return;
+      try{
+        sel.innerHTML = "";
+        SERVICOS_PRE.forEach((s, idx) => {
         const opt = document.createElement("option");
         opt.value = String(idx);
         opt.textContent = s.nome;
         sel.appendChild(opt);
       });
+      }catch(e){ /* fallback: mantém opções estáticas */ }
     }
 
     // ✅ Aplica serviço selecionado (preenche os campos)
@@ -645,8 +683,15 @@ function loadImageAsDataURL(src){
         if(unitEl) unitEl.value = "";
         if(desEl)  desEl.value  = "0,00";
         if(selEl)  selEl.value  = "0";
-        const idx = parseInt(sel.value || "0", 10);
-        const s = (typeof SERVICOS_PRE !== "undefined") ? SERVICOS_PRE[idx] : null;
+        const rawVal = sel.value || "0";
+        const idx = parseInt(rawVal, 10);
+        let s = null;
+        if(typeof SERVICOS_PRE !== "undefined"){
+          if(!isNaN(idx)) s = SERVICOS_PRE[idx];
+          if(!s && rawVal && rawVal !== "0"){
+            s = SERVICOS_PRE.find(x => (x?.nome === rawVal) || (x?.desc === rawVal)) || null;
+          }
+        }
         if(!s) return;
 
         const descEl = document.getElementById("descricao");
