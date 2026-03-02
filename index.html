@@ -1069,5 +1069,86 @@ try{window.__APP_INIT_OK=true;document.getElementById('debugInit').style.display
 })();
 </script>
 
+
+<script>
+/* ===== HOTFIX 2: Garantir inclusão do item ao clicar "Adicionar Serviço" ===== */
+(function(){
+  const btn = document.getElementById("btnAddServico");
+  if(!btn) return;
+
+  function parseMoneyBR(v){
+    if(v === null || v === undefined) return 0;
+    const s = String(v).replace(/[^\d,.-]/g,"").replace(/\./g,"").replace(",",".");
+    const n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+  }
+  function to2(n){ return (Number(n)||0).toFixed(2); }
+
+  btn.onclick = function(){
+    const descEl = document.getElementById("descricao");
+    const qtdEl  = document.getElementById("quantidade");
+    const unitEl = document.getElementById("valorUnitario");
+    const desEl  = document.getElementById("descontoServico");
+
+    const desc = (descEl?.value || "").trim();
+    const qtd  = parseFloat((qtdEl?.value || "").replace(",", "."));
+    const unit = parseMoneyBR(unitEl?.value || "");
+    const desconto = parseMoneyBR(desEl?.value || "0") || 0;
+
+    if(!desc){
+      alert("Preencha a descrição do serviço.");
+      return;
+    }
+    if(isNaN(qtd) || qtd <= 0){
+      alert("Preencha uma quantidade válida.");
+      return;
+    }
+    if(isNaN(unit)){
+      alert("Preencha um valor unitário válido.");
+      return;
+    }
+
+    const tbody = document.querySelector("#tabela tbody");
+    if(!tbody){
+      alert("Erro: tabela de itens não encontrada.");
+      return;
+    }
+
+    const total = qtd * unit;
+    const liquido = total - desconto;
+
+    const row = tbody.insertRow();
+    row.insertCell(0).innerText = desc;
+    row.cells[0].className = "desc";
+    row.insertCell(1).innerText = String(qtd);
+    row.insertCell(2).innerText = to2(unit);
+    row.insertCell(3).innerText = to2(total);
+    row.insertCell(4).innerText = to2(desconto);
+    row.insertCell(5).innerText = to2(liquido);
+
+    const actionCell = row.insertCell(6);
+    const b = document.createElement("button");
+    b.className = "btn-remove";
+    b.type = "button";
+    b.innerText = "Remover";
+    b.addEventListener("click", () => {
+      row.remove();
+      if(typeof recalcularTotal === "function") recalcularTotal();
+      if(typeof renderItensCards === "function") renderItensCards();
+    });
+    actionCell.appendChild(b);
+
+    if(typeof recalcularTotal === "function") recalcularTotal();
+    if(typeof renderItensCards === "function") renderItensCards();
+
+    // limpa
+    if(descEl) descEl.value = "";
+    if(qtdEl) qtdEl.value = "";
+    if(unitEl) unitEl.value = "";
+    if(desEl) desEl.value = "0,00";
+  };
+})();
+</script>
+
 </body>
 </html>
