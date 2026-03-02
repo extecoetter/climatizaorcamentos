@@ -4,76 +4,19 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
-<title>Proposta Comercial</title>
+<title>RE Climatização - Orçamento</title>
 <!-- PWA -->
 <link href="manifest.webmanifest" rel="manifest"/>
 <meta content="#0077cc" name="theme-color"/>
 <!-- iOS (Safari) -->
 <meta content="yes" name="apple-mobile-web-app-capable"/>
-<meta content="yes" name="mobile-web-app-capable"/>
 <meta content="default" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="RE Orçamentos" name="apple-mobile-web-app-title"/>
 <link href="icons/icon-192.png" rel="apple-touch-icon"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <style>
-    
-    /* ===== Premium look ===== */
-    :root{
-      --bg:#f6f8fc;
-      --card:#ffffff;
-      --text:#0f172a;
-      --muted:#64748b;
-      --line:#e2e8f0;
-      --brand:#2563eb;
-      --shadow:0 10px 30px rgba(2,8,23,.08);
-      --radius:18px;
-    }
-    body{ background:var(--bg); color:var(--text); }
-    .card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-    }
-    h2{ letter-spacing:-.01em; }
-    button{
-      border-radius:16px !important;
-      font-weight:900;
-    }
-    button.secondary{
-      background:#f1f5f9;
-      border:1px solid var(--line);
-      color:var(--text);
-    }
-    #btnGerarPDF{
-      background:linear-gradient(135deg, var(--brand), #0ea5e9) !important;
-      border:none !important;
-      color:#fff !important;
-      box-shadow:0 14px 28px rgba(37,99,235,.18);
-    }
-    input, textarea, select{
-      border:1px solid var(--line) !important;
-      border-radius:16px !important;
-      background:#fbfdff !important;
-      box-shadow: inset 0 1px 0 rgba(2,8,23,.03);
-    }
-    input:focus, textarea:focus, select:focus{
-      outline:none;
-      border-color:rgba(37,99,235,.55) !important;
-      box-shadow:0 0 0 4px rgba(37,99,235,.14);
-    }
-    #servicosProntosBlock{
-      padding:12px;
-      border:1px dashed #cbd5e1;
-      border-radius:16px;
-      background:#ffffff;
-      margin:10px 0 14px;
-    }
-    #servicosProntosBlock label{ font-weight:900; color:var(--muted); }
-    #servicosProntosBlock select{ height:52px; font-weight:800; }
-
-body{ margin:0; font-family:Arial, sans-serif; background:#f4f6f9; }
+    body{ margin:0; font-family:Arial, sans-serif; background:#f4f6f9; }
     .container{ padding:15px; max-width:700px; margin:auto; }
     .card{ background:white; padding:15px; border-radius:12px; margin-bottom:15px; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
     h2{ margin:0 0 10px 0; color:#0077cc; }
@@ -163,7 +106,7 @@ body{ margin:0; font-family:Arial, sans-serif; background:#f4f6f9; }
     }
     .item-card .meta b{ color:#111827; }
     /* Removido: Serviços prontos (substituído por "ADICIONAR ITEM") */
-    #servicosProntosBlock{ display:block; }
+    #servicosProntosBlock{ display:none; }
     .field-label{
       display:block;
       font-size:12px;
@@ -252,7 +195,7 @@ body{ margin:0; font-family:Arial, sans-serif; background:#f4f6f9; }
 <body>
 <div class="container">
 <div class="card">
-<h2>Proposta Comercial</h2>
+<h2>RE Climatização</h2>
 <label>Cliente</label>
 <input id="cliente" type="text"/>
 <div class="row">
@@ -295,11 +238,11 @@ body{ margin:0; font-family:Arial, sans-serif; background:#f4f6f9; }
   </div>
   <div>
     <label class="field-label">Valor unitário</label>
-    <div class="money-input"><span class="prefix">R$</span><input id="valorUnitario" placeholder="0,00" type="text" inputmode="decimal"/></div>
+    <input id="valorUnitario" placeholder="Valor Unitário" type="number"/>
   </div>
   <div>
     <label class="field-label">Desconto</label>
-    <div class="money-input"><span class="prefix">R$</span><input id="descontoServico" placeholder="0,00" type="text" inputmode="decimal" value="0,00"/></div>
+    <input id="descontoServico" placeholder="Desconto R$" type="number" value="0"/>
   </div>
 </div>
 
@@ -331,28 +274,17 @@ body{ margin:0; font-family:Arial, sans-serif; background:#f4f6f9; }
 <script>
     // ✅ EDITE AQUI SUA LISTA DE SERVIÇOS PRONTOS
     // Você pode colocar quantos quiser.
-    
     const SERVICOS_PRE = [
-      { nome: "Selecione um serviço...", desc: "", unit: 0, qtd: 1 },
+      { nome: "Selecione um serviço...", desc: "", unit: "", qtd: "" },
 
       { nome: "Higienização Split 9.000 a 12.000 BTUs", desc: "Higienização de ar-condicionado Split (9.000 a 12.000 BTUs)", unit: 180.00, qtd: 1 },
       { nome: "Higienização Split 18.000 a 24.000 BTUs", desc: "Higienização de ar-condicionado Split (18.000 a 24.000 BTUs)", unit: 200.00, qtd: 1 },
 
+      { nome: "Carga de gás (visita + diagnóstico)", desc: "Visita técnica + diagnóstico para carga de gás", unit: 80.00, qtd: 1 },
+
       { nome: "Instalação Split até 12.000 BTUs", desc: "Instalação de ar-condicionado Split até 12.000 BTUs", unit: 650.00, qtd: 1 },
-      { nome: "Instalação Split 18.000 a 24.000 BTUs", desc: "Instalação de ar-condicionado Split (18.000 a 24.000 BTUs)", unit: 850.00, qtd: 1 },
-
-      { nome: "Instalação Multi-Split (por evaporadora)", desc: "Instalação Multi-Split (por evaporadora)", unit: 0, qtd: 1 },
-      { nome: "Desinstalação de Equipamento", desc: "Desinstalação de Equipamento", unit: 0, qtd: 1 },
-      { nome: "Limpeza Química (desmontagem e lavagem)", desc: "Limpeza Química (desmontagem e lavagem)", unit: 0, qtd: 1 },
-      { nome: "Carga de Gás", desc: "Carga de Gás", unit: 0, qtd: 1 },
-      { nome: "Troca de Componente eletrônico", desc: "Troca de Componente eletrônico", unit: 0, qtd: 1 },
-      { nome: "Teste de Estanquidade", desc: "Teste de Estanquidade", unit: 0, qtd: 1 },
-      { nome: "Vácuo no Sistema", desc: "Vácuo no Sistema", unit: 0, qtd: 1 },
-      { nome: "Visita Técnica / Diagnóstico", desc: "Visita Técnica / Diagnóstico", unit: 0, qtd: 1 },
-      { nome: "Infra Estrutura", desc: "Infra Estrutura", unit: 0, qtd: 1 },
-      { nome: "Instalação/Manutenção Bomba de Dreno", desc: "Instalação/Manutenção Bomba de Dreno", unit: 0, qtd: 1 }
+      { nome: "Instalação Split 18.000 a 24.000 BTUs", desc: "Instalação de ar-condicionado Split (18.000 a 24.000 BTUs)", unit: 850.00, qtd: 1 }
     ];
-
 
     let totalGeral = 0;
     let lastPdfBlob = null;
@@ -361,10 +293,9 @@ body{ margin:0; font-family:Arial, sans-serif; background:#f4f6f9; }
     function recalcularTotal(){
       totalGeral = 0;
       document.querySelectorAll("#tabela tbody tr").forEach(tr => {
-        totalGeral += parseMoneyBR(tr.cells[5].innerText);
+        totalGeral += parseFloat(tr.cells[5].innerText) || 0;
       });
-      const totalEl = document.getElementById("total");
-      if(totalEl) totalEl.innerText = formatMoneyBR(totalGeral);
+      document.getElementById("total").innerText = totalGeral.toFixed(2);
     }
 
     
@@ -375,21 +306,6 @@ body{ margin:0; font-family:Arial, sans-serif; background:#f4f6f9; }
       }catch(e){
         return (Number(v||0).toFixed(2)).replace(".", ",");
       }
-
-    function parseMoneyBR(v){
-      if(v === null || v === undefined) return 0;
-      const s = String(v).replace(/[^\d,.-]/g,"").replace(/\./g,"").replace(",",".");
-      const n = parseFloat(s);
-      return isNaN(n) ? 0 : n;
-    }
-    function formatMoneyBR(n){
-      try{
-        return (Number(n)||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
-      }catch(e){
-        return "0,00";
-      }
-    }
-
     }
 
     function getRowNumbers(row){
@@ -579,11 +495,10 @@ function loadImageAsDataURL(src){
     // ✅ Monta o select de serviços prontos
     function popularServicosProntos(){
       const sel = document.getElementById("servicoPronto");
-      if(!sel) return;
       sel.innerHTML = "";
       SERVICOS_PRE.forEach((s, idx) => {
         const opt = document.createElement("option");
-        opt.value = idx === 0 ? "0" : s.nome;
+        opt.value = String(idx);
         opt.textContent = s.nome;
         sel.appendChild(opt);
       });
@@ -592,66 +507,34 @@ function loadImageAsDataURL(src){
     // ✅ Aplica serviço selecionado (preenche os campos)
     function aplicarServicoSelecionado(){
       const sel = document.getElementById("servicoPronto");
-      const raw = sel?.value || "0";
-      const btn = document.getElementById("btnAplicarServico");
-      if(btn){
-        btn.disabled = (raw === "0");
-        btn.style.opacity = btn.disabled ? "0.6" : "1";
-      }
-      if(raw === "0") return;
+      const idx = parseInt(sel.value, 10);
+      const s = SERVICOS_PRE[idx];
+      if(!s || !s.desc) return;
 
-      const s = SERVICOS_PRE.find(x => x.nome === raw) || null;
+      document.getElementById("descricao").value = s.desc;
+      document.getElementById("valorUnitario").value = (s.unit ?? "");
+      document.getElementById("quantidade").value = (s.qtd ?? 1);
 
-      document.getElementById("descricao").value = (s?.desc || raw);
-      document.getElementById("valorUnitario").value = formatMoneyBR(Number(s?.unit ?? 0));
-      document.getElementById("quantidade").value = String(s?.qtd ?? 1);
-      document.getElementById("descontoServico").value = "0,00";
-
-      // abre formulário (mobile)
-      const form = document.getElementById("addForm");
-      if(form){
-        form.classList.add("open");
-        try{ form.scrollIntoView({ behavior:"smooth", block:"start" }); }catch(e){}
-      }
+      // opcional: zera desconto ao escolher serviço pronto
+      document.getElementById("descontoServico").value = 0;
     }
 
     // inicializa select
     popularServicosProntos();
 
-    
-    (function(){
-      const unitEl = document.getElementById("valorUnitario");
-      const desEl  = document.getElementById("descontoServico");
-      [unitEl, desEl].forEach((el)=>{
-        if(!el) return;
-        el.addEventListener("blur", ()=>{ el.value = formatMoneyBR(parseMoneyBR(el.value)); });
-      });
-    })();
-document.getElementById("btnAplicarServico").addEventListener("click", aplicarServicoSelecionado);
-    document.getElementById("servicoPronto").addEventListener("change", () => {
-      const sel=document.getElementById("servicoPronto");
-      const btn=document.getElementById("btnAplicarServico");
-      if(btn){ btn.disabled = ((sel?.value||"0")==="0"); btn.style.opacity = btn.disabled ? "0.6":"1"; }
-    });
-// adicionar serviço
+    document.getElementById("btnAplicarServico").addEventListener("click", aplicarServicoSelecionado);
+
+    // bônus: ao trocar o select, já aplica automaticamente
+    document.getElementById("servicoPronto").addEventListener("change", aplicarServicoSelecionado);
+
+    // adicionar serviço
     document.getElementById("btnAddServico").addEventListener("click", function(){
       const desc = document.getElementById("descricao").value.trim();
       const qtd = parseFloat(document.getElementById("quantidade").value);
-      const unit = parseMoneyBR(document.getElementById("valorUnitario").value);
-      const desconto = parseMoneyBR(document.getElementById("descontoServico").value);
+      const unit = parseFloat(document.getElementById("valorUnitario").value);
+      const desconto = parseFloat(document.getElementById("descontoServico").value) || 0;
 
-      if(!desc){
-        alert("Preencha a descrição.");
-        return;
-      }
-      if(isNaN(qtd) || qtd <= 0){
-        alert("Preencha a quantidade.");
-        return;
-      }
-      if(!isFinite(unit) || unit < 0){
-        alert("Preencha o valor unitário.");
-        return;
-      }
+      if(!desc || isNaN(qtd) || isNaN(unit)) return;
 
       const total = qtd * unit;
       const liquido = total - desconto;
@@ -678,14 +561,40 @@ document.getElementById("btnAplicarServico").addEventListener("click", aplicarSe
       recalcularTotal();
       renderItensCards();
 
-      // limpa depois de adicionar
       document.getElementById("descricao").value = "";
       document.getElementById("quantidade").value = "";
       document.getElementById("valorUnitario").value = "";
-      document.getElementById("descontoServico").value = "0,00";
+      document.getElementById("descontoServico").value = 0;
     });
+
+    // Mobile: botão "ADICIONAR ITEM" abre/fecha o formulário
+    (function(){
+      const btn = document.getElementById("btnToggleAdd");
+      const form = document.getElementById("addForm");
+      if(!btn || !form) return;
+
+      function sync(){
+        if(window.matchMedia("(max-width: 768px)").matches){
+          form.classList.remove("open");
+        }else{
+          form.classList.add("open");
+        }
+      }
+      sync();
+      window.addEventListener("resize", sync);
+
+      btn.addEventListener("click", () => {
+        form.classList.toggle("open");
+        if(form.classList.contains("open")){
+          const el = document.getElementById("servicoPronto") || document.getElementById("descricao");
+          try{ el && el.focus(); }catch(e){}
+          try{ form.scrollIntoView({ behavior:"smooth", block:"start" }); }catch(e){}
+        }
+      });
     })();
-// compartilhar
+
+
+    // compartilhar
     document.getElementById("btnShare").addEventListener("click", async function(){
       if(!lastPdfBlob){
         alert("Gere o PDF antes de compartilhar.");
@@ -695,7 +604,7 @@ document.getElementById("btnAplicarServico").addEventListener("click", aplicarSe
 
       if(navigator.share && navigator.canShare && navigator.canShare({ files: [file] })){
         try{
-          await navigator.share({ title: "Orçamento Proposta Comercial", text: "Segue o orçamento em PDF.", files: [file] });
+          await navigator.share({ title: "Orçamento RE Climatização", text: "Segue o orçamento em PDF.", files: [file] });
         }catch(e){}
       }else{
         alert("Seu navegador não suporta compartilhar arquivo direto. Use o botão 'Abrir WhatsApp (mensagem)' e anexe o PDF manualmente.");
@@ -806,7 +715,7 @@ document.getElementById("btnAplicarServico").addEventListener("click", aplicarSe
       doc.setFont("helvetica","bold");
       doc.setFontSize(14);
       doc.setTextColor(0,0,0);
-      doc.text("Total Geral: R$ " + formatMoneyBR(totalGeral), pageW - margin, y, { align: 'right' });
+      doc.text("Total Geral: R$ " + totalGeral.toFixed(2), pageW - margin, y, { align: 'right' });
       y += 10;
 
       doc.setFont("helvetica","bold");
@@ -847,6 +756,13 @@ document.getElementById("btnAplicarServico").addEventListener("click", aplicarSe
       y += 18;
 
       doc.setDrawColor(160,160,160);
+      doc.setLineWidth(0.6);
+      doc.line(55, y, 155, y);
+      y += 6;
+
+      doc.setTextColor(90,90,90);
+      doc.text("Assinatura do cliente", 105, y, { align: "center" });
+
       lastPdfFilename = "Orcamento_" + ((cliente || "Cliente").replace(/[\\/:*?"<>|]/g, "")) + ".pdf";
       lastPdfBlob = doc.output("blob");
 
@@ -866,3 +782,4 @@ document.getElementById("btnAplicarServico").addEventListener("click", aplicarSe
 </script>
 </body>
 </html>
+
