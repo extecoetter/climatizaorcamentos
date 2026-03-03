@@ -284,13 +284,16 @@
   background:#2563eb;
   color:#fff;
 }
+
+/* hide internal add */
+#btnAddServico{display:none !important;}
 </style>
 </head>
 <body>
 <div class="container">
 <div class="card">
 <div class="title-pill">Proposta Comercial</div>
-<div class="app-version">Versão: v17-reset</div>
+<div class="app-version">Versão: v18A-um-botao</div>
 <label>Cliente</label>
 <input id="cliente" type="text"/>
 <div class="row">
@@ -375,9 +378,7 @@
 <button class="secondary" id="btnWhatsAppFallback" type="button">Abrir WhatsApp (mensagem)</button>
 </div>
 </div>
-<button id="btnGerarPDF" type="button">GERAR ORÇAMENTO</button><div class="bottom-spacer"></div>
-</div>
-<script>
+<button id="btnGerarPDF" type="button"<script>
 /**
  * RE Orçamento (ES5 compatível p/ iPhone antigo)
  * - Fonte única: state.items[]
@@ -388,7 +389,7 @@
 (function () {
   "use strict";
 
-  var APP_VERSION = "v17-reset";
+  var APP_VERSION = "v18A-um-botao";
 
   // ===== Config =====
   var CONFIG = {
@@ -1085,16 +1086,7 @@
   function initMobileAddToggle() {
     var form = dom.addForm();
     if (form && !isMobile()) form.classList.add("open");
-    var btn = dom.btnToggleAdd();
-    if (!btn || !form) return;
-
-    btn.addEventListener("click", function () {
-      form.classList.toggle("open");
-      if (form.classList.contains("open")) {
-        var el = dom.descricao();
-        try { if (el) el.focus(); } catch (e) {}
-        try { form.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {}
-      }
+  }
     });
   }
 
@@ -1107,8 +1099,21 @@
   function bindEvents() {
     var el;
 
-    el = dom.btnAddServico();
-    if (el) el.addEventListener("click", addServicoFromForm);
+    // Botão único: se form fechado -> abre; se aberto -> adiciona
+    el = dom.btnToggleAdd();
+    if (el) el.addEventListener("click", function () {
+      var form = dom.addForm();
+      if (!form) { addServicoFromForm(); return; }
+
+      if (!form.classList.contains("open")) {
+        form.classList.add("open");
+        var d = dom.descricao();
+        try { if (d) d.focus(); } catch (e) {}
+        try { form.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e2) {}
+        return;
+      }
+      addServicoFromForm();
+    });
 
     el = dom.btnShare();
     if (el) el.addEventListener("click", sharePdf);
@@ -1123,8 +1128,9 @@
     if (el) el.addEventListener("click", adicionarServicoPronto);
 
     el = dom.servicoPronto();
-    if (el) el.addEventListener("change", function () { /* só seleção */ });
+    if (el) el.addEventListener("change", function () { });
   }
+
 
   function init() {
     popularServicosProntos();
@@ -1145,11 +1151,14 @@
     showBootError(err && err.message ? err.message : "Falha na inicialização");
   }
 })();
+</script>age ? err.message : "Falha na inicialização");
+  }
+})();
 </script>
 
 <div id="bootError">
   <div><b>Erro no app.</b> Abra o console no PC (F12) para ver detalhes.</div>
-  <div class="small">Versão carregada: v17-reset</div>
+  <div class="small">Versão carregada: v18A-um-botao</div>
   <button type="button" id="btnBootReload">Recarregar</button>
 </div>
 </body>
