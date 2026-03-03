@@ -290,7 +290,7 @@
 <div class="container">
 <div class="card">
 <div class="title-pill">Proposta Comercial</div>
-<div class="app-version">Versão: v18-delegacao</div>
+<div class="app-version">Versão: v18b-delegacao-fix</div>
 <label>Cliente</label>
 <input id="cliente" type="text"/>
 <div class="row">
@@ -327,7 +327,7 @@
 
 <div id="tab-prontos" class="tab-pane">
   <label class="field-label">Serviços prontos</label>
-  <select id="servicoPronto" class="item-select" data-action="preset_select"></select>
+  <select id="servicoPronto" class="item-select"></select>
   <button class="secondary" id="btnAplicarServico" type="button" style="margin-top:10px;" data-action="add_preset">Adicionar serviço</button>
   <p class="muted" style="margin:10px 0 0 0;">Dica: ao aplicar, a descrição, quantidade e valor unitário são preenchidos automaticamente.</p>
 </div>
@@ -388,7 +388,7 @@
 (function () {
   "use strict";
 
-  var APP_VERSION = "v18-delegacao";
+  var APP_VERSION = "v18b-delegacao-fix";
 
   // ===== Config =====
   var CONFIG = {
@@ -472,6 +472,10 @@
       if (msg) {
         box.firstElementChild.innerHTML = "<b>Erro no app.</b> " + String(msg);
       }
+      var btn = document.getElementById("btnBootReload");
+      if (btn) btn.onclick = function () { location.reload(); };
+    } catch (e) {}
+  }
 
   // ===== Delegação de eventos (estabilidade) =====
   function findActionTarget(el) {
@@ -483,10 +487,6 @@
     return null;
   }
 
-      var btn = document.getElementById("btnBootReload");
-      if (btn) btn.onclick = function () { location.reload(); };
-    } catch (e) {}
-  }
 
 
 
@@ -1083,7 +1083,6 @@
 
   // ===== Init =====
   function bindEvents() {
-    // Um único listener: mexeu no layout, não quebra eventos.
     document.addEventListener("click", function (e) {
       var t = e.target;
       var el = findActionTarget(t);
@@ -1104,33 +1103,13 @@
         return;
       }
 
-      if (action === "add_manual") {
-        addServicoFromForm();
-        return;
-      }
-
-      if (action === "add_preset") {
-        adicionarServicoPronto();
-        return;
-      }
-
-      if (action === "pdf") {
-        gerarPdf();
-        return;
-      }
-
-      if (action === "share") {
-        sharePdf();
-        return;
-      }
-
-      if (action === "whats") {
-        openWhatsAppFallback();
-        return;
-      }
+      if (action === "add_manual") { addServicoFromForm(); return; }
+      if (action === "add_preset") { adicionarServicoPronto(); return; }
+      if (action === "pdf") { gerarPdf(); return; }
+      if (action === "share") { sharePdf(); return; }
+      if (action === "whats") { openWhatsAppFallback(); return; }
     });
 
-    // Eventos que não são click
     var sel = dom.servicoPronto();
     if (sel) sel.addEventListener("change", function () { /* só seleção */ });
   }
@@ -1158,7 +1137,7 @@
 
 <div id="bootError">
   <div><b>Erro no app.</b> Abra o console no PC (F12) para ver detalhes.</div>
-  <div class="small">Versão carregada: v18-delegacao</div>
+  <div class="small">Versão carregada: v18b-delegacao-fix</div>
   <button type="button" id="btnBootReload">Recarregar</button>
 </div>
 </body>
