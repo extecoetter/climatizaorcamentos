@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
-<title>RE6 Climatização - Orçamento</title>
+<title>RE Climatização000 - Orçamento</title>
 <!-- PWA -->
 <meta content="#0077cc" name="theme-color"/>
 <!-- iOS (Safari) -->
@@ -256,13 +256,32 @@
   font-weight:800;
   font-size:12px;
 }
+
+#jsStatus{font-weight:900;}
+#bootError{
+  display:none;
+  position:fixed;
+  z-index:9999;
+  left:12px; right:12px; bottom:12px;
+  background:#111827; color:#fff;
+  border-radius:14px; padding:12px 14px;
+  font-size:13px; line-height:1.35;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+#bootError b{font-weight:900;}
+#bootError pre{white-space:pre-wrap; word-break:break-word; font-size:12px; opacity:.95; margin:8px 0 0 0;}
+#bootError button{
+  margin-top:10px; border:none; border-radius:10px;
+  padding:10px 12px; font-weight:900;
+  background:#2563eb; color:#fff;
+}
 </style>
 </head>
 <body>
 <div class="container">
 <div class="card">
 <div class="title-pill">Proposta Comercial</div>
-<div class="app-version">Versão: v20-rebuild-limpo</div>
+<div class="app-version">Versão: v21-debug · <span id="jsStatus">JS: carregando…</span></div>
 <label>Cliente</label>
 <input id="cliente" type="text"/>
 <div class="row">
@@ -360,7 +379,7 @@
 (function () {
   "use strict";
 
-  var APP_VERSION = "v20-rebuild-limpo";
+  var APP_VERSION = "v21-debug";
 
   // ===== Config =====
   var CONFIG = {
@@ -404,6 +423,23 @@
   function qsa(sel, root) {
     return Array.prototype.slice.call((root || document).querySelectorAll(sel));
   }
+
+  function showBootError(err) {
+    try {
+      var box = document.getElementById("bootError");
+      var txt = document.getElementById("bootErrorText");
+      var btn = document.getElementById("btnBootReload");
+      if (btn) btn.onclick = function(){ location.reload(); };
+      if (txt) txt.textContent = String(err && err.stack ? err.stack : err);
+      if (box) box.style.display = "block";
+    } catch(e) {}
+  }
+
+  window.onerror = function (msg, src, line, col, error) {
+    showBootError((error && error.stack) ? error.stack : (msg + " @ " + line + ":" + col));
+    return false;
+  };
+
 
   var dom = {
     cliente: function () { return qs("#cliente"); },
@@ -1074,10 +1110,32 @@
     initPWA();
     recalcAndRender();
   }
+  function setJsStatusOk(){
+    try{ var s=document.getElementById("jsStatus"); if(s) s.textContent="JS: OK"; }catch(e){}
+  }
 
-  init();
+  function boot(){
+    try {
+      init();
+      setJsStatusOk();
+    } catch (err) {
+      showBootError(err);
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
 })();
 </script>
+
+<div id="bootError">
+  <div><b>Erro no app.</b> Veja detalhes abaixo.</div>
+  <pre id="bootErrorText"></pre>
+  <button type="button" id="btnBootReload">Recarregar</button>
+</div>
 </body>
 </html>
 
