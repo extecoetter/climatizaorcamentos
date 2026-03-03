@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
-<title>Orçamento</title>
+<title>RE Climatização - Orçamento</title>
 <!-- PWA -->
 <link href="manifest.webmanifest" rel="manifest"/>
 <meta content="#0077cc" name="theme-color"/>
@@ -284,16 +284,13 @@
   background:#2563eb;
   color:#fff;
 }
-
-/* hide internal add */
-#btnAddServico{display:none !important;}
 </style>
 </head>
 <body>
 <div class="container">
 <div class="card">
 <div class="title-pill">Proposta Comercial</div>
-<div class="app-version">Versão: v18A-um-botao</div>
+<div class="app-version">Versão: v18B-dois-botoes-safe</div>
 <label>Cliente</label>
 <input id="cliente" type="text"/>
 <div class="row">
@@ -378,7 +375,9 @@
 <button class="secondary" id="btnWhatsAppFallback" type="button">Abrir WhatsApp (mensagem)</button>
 </div>
 </div>
-<button id="btnGerarPDF" type="button"<script>
+<button id="btnGerarPDF" type="button">GERAR ORÇAMENTO</button><div class="bottom-spacer"></div>
+</div>
+<script>
 /**
  * RE Orçamento (ES5 compatível p/ iPhone antigo)
  * - Fonte única: state.items[]
@@ -389,7 +388,7 @@
 (function () {
   "use strict";
 
-  var APP_VERSION = "v18A-um-botao";
+  var APP_VERSION = "v18B-dois-botoes-safe";
 
   // ===== Config =====
   var CONFIG = {
@@ -1099,21 +1098,23 @@
   function bindEvents() {
     var el;
 
-    // Botão único: se form fechado -> abre; se aberto -> adiciona
+    // Botão superior: abre/fecha formulário
     el = dom.btnToggleAdd();
     if (el) el.addEventListener("click", function () {
       var form = dom.addForm();
-      if (!form) { addServicoFromForm(); return; }
+      if (!form) return;
 
-      if (!form.classList.contains("open")) {
-        form.classList.add("open");
+      form.classList.toggle("open");
+      if (form.classList.contains("open")) {
         var d = dom.descricao();
         try { if (d) d.focus(); } catch (e) {}
         try { form.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e2) {}
-        return;
       }
-      addServicoFromForm();
     });
+
+    // Botão interno: adiciona manualmente
+    el = dom.btnAddServico();
+    if (el) el.addEventListener("click", addServicoFromForm);
 
     el = dom.btnShare();
     if (el) el.addEventListener("click", sharePdf);
@@ -1151,14 +1152,11 @@
     showBootError(err && err.message ? err.message : "Falha na inicialização");
   }
 })();
-</script>age ? err.message : "Falha na inicialização");
-  }
-})();
 </script>
 
 <div id="bootError">
   <div><b>Erro no app.</b> Abra o console no PC (F12) para ver detalhes.</div>
-  <div class="small">Versão carregada: v18A-um-botao</div>
+  <div class="small">Versão carregada: v18B-dois-botoes-safe</div>
   <button type="button" id="btnBootReload">Recarregar</button>
 </div>
 </body>
