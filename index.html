@@ -12,7 +12,7 @@
 <!-- iOS (Safari) -->
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="default" name="apple-mobile-web-app-status-bar-style"/>
-<meta content="RE2 Orçamentos" name="apple-mobile-web-app-title"/>
+<meta content="RE Orçamentos" name="apple-mobile-web-app-title"/>
 <link href="icons/icon-192.png" rel="apple-touch-icon"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -1083,11 +1083,9 @@
 
   // ===== Mobile UX (sem resize) =====
   function initMobileAddToggle() {
-    var form = dom.addForm();
-    if (form && !isMobile()) form.classList.add("open");
-  }
-    });
-  }
+  var form = dom.addForm();
+  if (form && !isMobile()) form.classList.add("open");
+}
 
   // ===== PWA =====
   function initPWA() {
@@ -1130,26 +1128,7 @@
 
     el = dom.servicoPronto();
     if (el) el.addEventListener("change", function () { });
-  }
-      addServicoFromForm();
-    });
-
-    el = dom.btnShare();
-    if (el) el.addEventListener("click", sharePdf);
-
-    el = dom.btnWhatsAppFallback();
-    if (el) el.addEventListener("click", openWhatsAppFallback);
-
-    el = dom.btnGerarPDF();
-    if (el) el.addEventListener("click", gerarPdf);
-
-    el = dom.btnAplicarServico();
-    if (el) el.addEventListener("click", adicionarServicoPronto);
-
-    el = dom.servicoPronto();
-    if (el) el.addEventListener("change", function () { });
-  }
-
+  
 
   function init() {
     popularServicosProntos();
