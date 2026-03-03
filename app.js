@@ -3,10 +3,10 @@
 
   // Sinal para o loader: este script EXECUTOU
   try { window.__APP_EXECUTED__ = true; } catch(e) {}
-  try { var _st = document.getElementById("jsStatus"); if (_st) _st.textContent = "JS: executando... (v28-syntax-ok)"; } catch(e2) {}
+  try { var _st = document.getElementById("jsStatus"); if (_st) _st.textContent = "JS: executando... (v29-fix-moeda-pdf)"; } catch(e2) {}
 
 
-  var APP_VERSION = "v28-syntax-ok";
+  var APP_VERSION = "v29-fix-moeda-pdf";
 
   function qs(sel, root) { return (root || document).querySelector(sel); }
   function qsa(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
@@ -116,74 +116,29 @@
   function attachCurrencyMask(el, opts){
     if (!el) return;
     var def = (opts && opts.defaultValue) ? opts.defaultValue : "0,00";
-    var digits = "";
 
-    function setFromDigits(d){
-      digits = onlyDigits(d);
-      if (!digits) digits = "0";
-      el.value = formatMoedaFromDigits(digits);
-      try { el.setAttribute("data-digits", digits); } catch(e){}
+    function normalize(){
+      var d = onlyDigits(el.value);
+      if (!d) d = "0";
+      el.value = formatMoedaFromDigits(d);
+      try { el.setSelectionRange(el.value.length, el.value.length); } catch(e){}
     }
 
-    // inicia
-    setFromDigits(el.value || def);
+    if (!el.value) el.value = def;
+    normalize();
 
-    el.addEventListener("keydown", function(ev){
-      ev = ev || window.event;
-      var k = ev.key;
-
-      if (k === "Tab" || k === "ArrowLeft" || k === "ArrowRight" || k === "Home" || k === "End") return;
-
-      if (k === "Backspace") {
-        if (ev.preventDefault) ev.preventDefault();
-        else ev.returnValue = false;
-
-        digits = onlyDigits(el.getAttribute("data-digits") || digits);
-        digits = digits.slice(0, -1);
-        if (!digits) digits = "0";
-        setFromDigits(digits);
-        return;
-      }
-
-      if (k === "Delete") {
-        if (ev.preventDefault) ev.preventDefault();
-        else ev.returnValue = false;
-        setFromDigits("0");
-        return;
-      }
-
-      if (k && k.length === 1 && k >= "0" && k <= "9") {
-        if (ev.preventDefault) ev.preventDefault();
-        else ev.returnValue = false;
-
-        digits = onlyDigits(el.getAttribute("data-digits") || digits);
-        if (digits === "0") digits = "";
-        digits += k;
-        setFromDigits(digits);
-        return;
-      }
-
-      if (ev.preventDefault) ev.preventDefault();
-      else ev.returnValue = false;
-    });
-
-    el.addEventListener("paste", function(ev){
-      ev = ev || window.event;
-      if (ev.preventDefault) ev.preventDefault();
-      var text = "";
-      try { text = (ev.clipboardData || window.clipboardData).getData("text"); } catch(e){}
-      setFromDigits(text);
-    });
-
+    el.addEventListener("input", normalize);
     el.addEventListener("focus", function(){
-      if (!el.value) setFromDigits(def);
+      if (!el.value) el.value = def;
+      normalize();
       try { el.select(); } catch(e){}
     });
-
-    el.addEventListener("input", function(){
-      setFromDigits(el.value);
+    el.addEventListener("blur", function(){
+      if (!el.value) el.value = def;
+      normalize();
     });
   }
+
 
 
   function recalcTotal(){
@@ -197,7 +152,7 @@
     }
     state.totalGeral = total;
     var span = dom.totalSpan();
-    if (span) span.textContent = (Math.round(total*100)/100).toFixed(2);
+    if (span) span.textContent = fmtBR(total);
   }
 
   function renderTable(){
@@ -218,10 +173,10 @@
       tr.appendChild(td0);
 
       var td1 = document.createElement("td"); td1.textContent = String(it.qtd); tr.appendChild(td1);
-      var td2 = document.createElement("td"); td2.textContent = (Math.round(it.unit*100)/100).toFixed(2); tr.appendChild(td2);
-      var td3 = document.createElement("td"); td3.textContent = (Math.round(bruto*100)/100).toFixed(2); tr.appendChild(td3);
-      var td4 = document.createElement("td"); td4.textContent = (Math.round(it.desconto*100)/100).toFixed(2); tr.appendChild(td4);
-      var td5 = document.createElement("td"); td5.textContent = (Math.round(liquido*100)/100).toFixed(2); tr.appendChild(td5);
+      var td2 = document.createElement("td"); td2.textContent = fmtBR(it.unit); tr.appendChild(td2);
+      var td3 = document.createElement("td"); td3.textContent = fmtBR(bruto); tr.appendChild(td3);
+      var td4 = document.createElement("td"); td4.textContent = fmtBR(it.desconto); tr.appendChild(td4);
+      var td5 = document.createElement("td"); td5.textContent = fmtBR(liquido); tr.appendChild(td5);
 
       var td6 = document.createElement("td");
       var btn = document.createElement("button");
@@ -363,6 +318,7 @@
         }
 
         try {
+          if (!doc.autoTable) { throw new Error("autoTable não carregou"); }
           doc.autoTable({
             startY: y,
             head: head,
@@ -403,6 +359,7 @@
         if (sa) sa.style.display = "block";
       } catch(err) {
         showBootError(err);
+        try { alert("Erro ao gerar PDF: " + (err && err.message ? err.message : err)); } catch(eAl) {}
       }
     });
   }
@@ -476,7 +433,7 @@ el = dom.btnAddServico();
 
   function init(){
     try { if (dom.appVersion()) dom.appVersion().textContent = APP_VERSION; } catch(e) {}
-    try { if (dom.jsStatus()) dom.jsStatus().textContent = "JS: OK (v28-syntax-ok)"; } catch(e2) {}
+    try { if (dom.jsStatus()) dom.jsStatus().textContent = "JS: OK (v29-fix-moeda-pdf)"; } catch(e2) {}
 
     popularServicosProntos();
     initMobileDefaults();
@@ -489,7 +446,8 @@ el = dom.btnAddServico();
   }
 
   function boot(){
-    try { init(); } catch(err){ showBootError(err); }
+    try { init(); } catch(err){ showBootError(err);
+        try { alert("Erro ao gerar PDF: " + (err && err.message ? err.message : err)); } catch(eAl) {} }
   }
 
   if (document.readyState === "loading") {
