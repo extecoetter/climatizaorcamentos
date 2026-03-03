@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  var APP_VERSION = "v25-fixes-logo-moeda-layout";
+  var APP_VERSION = "v26-loader-debug";
 
   function qs(sel, root) { return (root || document).querySelector(sel); }
   function qsa(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
@@ -472,7 +472,7 @@ el = dom.btnAddServico();
 
   function init(){
     try { if (dom.appVersion()) dom.appVersion().textContent = APP_VERSION; } catch(e) {}
-    try { if (dom.jsStatus()) dom.jsStatus().textContent = "JS: OK (v25-fixes-logo-moeda-layout)"; } catch(e2) {}
+    try { if (dom.jsStatus()) dom.jsStatus().textContent = "JS: OK (v26-loader-debug)"; } catch(e2) {}
 
     popularServicosProntos();
     initMobileDefaults();
