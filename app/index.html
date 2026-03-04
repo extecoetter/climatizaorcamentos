@@ -473,27 +473,17 @@
     .pdf .datebox .validadeLine{ font-size: 11px !important; }
     .pdf .pdfTitleCenter{ color:#0b1220 !important; }
     .pdf .gapTel{ display:inline-block; width:18px; }
-  
-    .ver{
-      display:inline-block;
-      margin-left:8px;
-      font-weight:900;
-      font-size:12px;
-      background: rgba(255,255,255,.18);
-      border:1px solid rgba(255,255,255,.25);
-      padding:4px 10px;
-      border-radius: 999px;
-      vertical-align: middle;
-    }
-
-</style>
+  </style>
 </head>
 
 <body>
   <div class="wrap">
     <div class="appbar">
-      <h1>Proposta Comercial - Climatização</h1>
-      <p>Adicione serviços e gere o PDF. <span class="ver" id="appVer">BETA 0.1.11</span></p>
+      <div style="display:flex; align-items:center; gap:10px; justify-content:space-between;">
+        <h1 style="margin:0">Proposta Comercial - Climatização</h1>
+        <span id="appVersionBadge" style="font-weight:1000; font-size:12px; background:rgba(255,255,255,.18); padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.22); white-space:nowrap;">BETA</span>
+      </div>
+      <p>Adicione serviços e gere o PDF.</p>
     </div>
 
     <div class="section-title">👤 DADOS DO ORÇAMENTO</div>
@@ -700,8 +690,11 @@
     INSTALLER_LOGO_DATA = await inlineImageToDataURL(INSTALLER.logo);
 
     // ====== CÓDIGO ORIGINAL ======
-    const APP_VERSION = 'BETA 0.1.11';
     const brl = new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' });
+
+    const APP_VERSION = "BETA 0.1.11";
+    const vb = document.getElementById("appVersionBadge");
+    if(vb) vb.textContent = APP_VERSION;
 
     // === PDF REAL (jsPDF + html2canvas) ===
     async function captureElementToCanvas(el){
@@ -747,7 +740,6 @@
 
     async function gerarPdfRealBlob(){
       fillPDF();
-
       const pdfEl = document.getElementById("pdf");
       const canvas = await captureElementToCanvas(pdfEl);
       const imgData = canvas.toDataURL("image/jpeg", 0.95);
@@ -773,6 +765,7 @@
           if(remaining > 0) doc.addPage();
         }
       }
+
       return doc.output("blob");
     }
 
@@ -1081,8 +1074,7 @@ function fillPDF(){
         const blob = await gerarPdfRealBlob();
         const file = new File([blob], "proposta.pdf", { type: "application/pdf" });
 
-        // 1) Compartilhar direto (melhor no Android/PWA)
-        if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+        if(navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))){
           await navigator.share({
             title: "Proposta Comercial",
             text: "Segue a proposta em PDF.",
@@ -1091,7 +1083,6 @@ function fillPDF(){
           return;
         }
 
-        // 2) Fallback: abre o PDF em nova aba
         const url = URL.createObjectURL(blob);
         window.open(url, "_blank");
         setTimeout(() => URL.revokeObjectURL(url), 60_000);
@@ -1099,23 +1090,10 @@ function fillPDF(){
         alert("Erro ao gerar/compartilhar PDF: " + (e?.message || e));
       }
     });
-// Abre o PDF para visualizar imediatamente
-        const url = URL.createObjectURL(blob);
-        window.open(url, "_blank");
-
-        // Compartilhar com o PDF anexado (quando suportado)
-        if(navigator.share && navigator.canShare && navigator.canShare({ files: [file] })){
-          await navigator.share({
-            title: "Proposta Comercial",
-            text: "Segue a proposta em PDF.",
-            files: [file]
-          });
-        }
-
-        setTimeout(() => URL.revokeObjectURL(url), 60_000);
-      }catch(e){
-        alert("Erro ao gerar/compartilhar PDF: " + (e?.message || e));
-      }
+// Aguarda o logo carregar antes do print (evita sair branco no topo)
+      const logoEl = document.getElementById('pdfLogo');
+      await waitImageLoaded(logoEl, 5000);
+      window.print();
     });
 document.getElementById('btnLimpar').addEventListener('click', () => {
       state.items = [];
@@ -1126,9 +1104,6 @@ document.getElementById('btnLimpar').addEventListener('click', () => {
       document.getElementById('obs').value = "";
       document.getElementById('pagamento').value = "";
       document.getElementById('data').value = todayISO();
-    const verEl = document.getElementById('appVer');
-    if(verEl) verEl.textContent = APP_VERSION;
-
       const vEl = document.getElementById('validade'); if(vEl && !vEl.value) vEl.value = "7 dias";
       recalc();
     });
