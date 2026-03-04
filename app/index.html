@@ -1062,7 +1062,7 @@ function fillPDF(){
     }
 
     document.getElementById('btnAdd').addEventListener('click', addItem);
-    document.getElementById("btnPdf").addEventListener("click", async () => {
+    document.getElementById('btnPdf').addEventListener('click', async () => {
       try{
         const blob = await gerarPdfRealBlob();
         const file = new File([blob], "proposta.pdf", { type: "application/pdf" });
@@ -1084,11 +1084,6 @@ function fillPDF(){
       }catch(e){
         alert("Erro ao gerar/compartilhar PDF: " + (e?.message || e));
       }
-    });
-// Aguarda o logo carregar antes do print (evita sair branco no topo)
-      const logoEl = document.getElementById('pdfLogo');
-      await waitImageLoaded(logoEl, 5000);
-      window.print();
     });
 document.getElementById('btnLimpar').addEventListener('click', () => {
       state.items = [];
