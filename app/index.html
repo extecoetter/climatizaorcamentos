@@ -630,7 +630,7 @@
   <div class="actions">
     <div class="inner">
       <button class="btn" id="btnLimpar" type="button">Limpar</button>
-      <button class="btn primary" id="btnPdf" type="button">Gerar PDF</button>
+      <button class="btn primary" id="btnPdf" type="button">Compartilhar PDF</button>
     </div>
   </div>
 
@@ -1062,10 +1062,30 @@ function fillPDF(){
     }
 
     document.getElementById('btnAdd').addEventListener('click', addItem);
-    document.getElementById('btnPdf').addEventListener('click', async () => {
-      try{
+    document.getElementById("btnPdf").addEventListener("click", async () => {
+      try {
         const blob = await gerarPdfRealBlob();
         const file = new File([blob], "proposta.pdf", { type: "application/pdf" });
+
+        // 1) Compartilhar direto (melhor UX no Android/PWA)
+        if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+          await navigator.share({
+            title: "Proposta Comercial",
+            text: "Segue a proposta em PDF.",
+            files: [file],
+          });
+          return;
+        }
+
+        // 2) Fallback: abre o PDF em nova aba para o usuário compartilhar/salvar pelo visualizador
+        const url = URL.createObjectURL(blob);
+        window.open(url, "_blank");
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      } catch (e) {
+        alert("Erro ao gerar/compartilhar PDF: " + (e?.message || e));
+      }
+    });
+const file = new File([blob], "proposta.pdf", { type: "application/pdf" });
 
         // Abre o PDF para visualizar imediatamente
         const url = URL.createObjectURL(blob);
