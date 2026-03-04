@@ -735,13 +735,33 @@
       return canvas;
     }
 
-    async function gerarPdfRealBlob(){
+        async function waitForPdfReady(timeoutMs = 3000){
+      const t0 = Date.now();
+      while(Date.now() - t0 < timeoutMs){
+        const clienteLine = document.getElementById("pdfClienteLine");
+        const dataEl = document.getElementById("pdfData");
+        const instLine = document.querySelector(".pdf .instLine .v");
+        const okText = (clienteLine && clienteLine.textContent.trim().length > 0) &&
+                       (dataEl && dataEl.textContent.trim().length >= 8) &&
+                       (instLine && instLine.textContent.trim().length > 0);
+        if(okText) return true;
+        await new Promise(requestAnimationFrame);
+      }
+      return false;
+    }
+
+async function gerarPdfRealBlob(){
       fillPDF();
 
-      // garante que o DOM do PDF atualizou antes de capturar
+      // garante DOM atualizado (cliente/endereço/itens)
       await new Promise(requestAnimationFrame);
       await new Promise(requestAnimationFrame);
-      await waitImageLoaded(document.getElementById("pdfLogo"), 4000);
+      await waitForPdfReady(3000);
+
+      // aguarda logo carregar (se for URL)
+      await waitImageLoaded(document.getElementById("pdfLogo"), 5000);
+
+      
 
 const pdfEl = document.getElementById("pdf");
       const canvas = await captureElementToCanvas(pdfEl);
@@ -1091,9 +1111,14 @@ function fillPDF(){
 
     document.getElementById('btnAdd').addEventListener('click', addItem);
     document.getElementById('btnPdf').addEventListener('click', async () => {
+      // Gerador padrão (print). Mantido como fallback seguro.
       fillPDF();
+      const logoEl = document.getElementById('pdfLogo');
+      await waitImageLoaded(logoEl, 5000);
+      window.print();
+    });
 
-    // Botão "Compartilhar PDF" (não interfere no restante do app)
+// Botão "Compartilhar PDF" (não interfere no restante do app)
     const btnShare = document.getElementById("btnShare");
     if(btnShare){
       btnShare.addEventListener("click", async () => {
