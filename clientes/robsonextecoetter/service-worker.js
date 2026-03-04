@@ -1,6 +1,6 @@
 const SLUG = "robsonextecoetter";
-const APP_V = "0.1.11";          // versão do app (querystring)
-const SW_V  = "v13";             // versão do service worker (mude sempre que atualizar)
+const APP_V = "0.1.12";          // versão do app (querystring)
+const SW_V  = "v14";             // versão do service worker (mude sempre que atualizar)
 
 const CACHE = `orcamento-${SLUG}-${SW_V}`;
 
