@@ -1,6 +1,8 @@
-window.DADOS_INSTALADOR = {
-  nome: "Robson A Extecoetter",
-  whatsapp: "(14) 99707-3447",
-  pix: "14 99707 3447 - Robson Extecoetter",
-  logo: "/clientes/robson/logo.png"
+window.CLIENT_CONFIG = {
+  installer: {
+    nome: "Robson Andre Extecoetter",
+    whats: "(14) 99707-3447",
+    pix: "14 99707 3447 / Robson A Extecoetter"
+  },
+  logo: "/clientes/robsonextecoetter/logo.png"
 };
