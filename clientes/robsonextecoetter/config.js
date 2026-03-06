@@ -4,5 +4,5 @@ window.CLIENT_CONFIG = {
     whats: "(14) 99707-3447",
     pix: "14 99707 3447 / Robson A Extecoetter"
   },
-  logo: "/clientes/robsonextecoetter/logo.png"
+  logo: "/climatizaorcamentos/clientes/robsonextecoetter/logo.png"
 };
