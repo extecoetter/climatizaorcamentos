@@ -1583,5 +1583,36 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 
 </script>
+     
+     <script>
+async function carregarDadosInstalador() {
+  const params = new URLSearchParams(window.location.search);
+  const cliente = params.get("cliente");
+
+  if (!cliente) {
+    console.warn("Cliente não informado na URL");
+    return null;
+  }
+
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "/clientes/" + cliente + "/dados.js";
+    script.onload = () => resolve(window.DADOS_INSTALADOR || null);
+    script.onerror = () => reject(new Error("Não foi possível carregar os dados do instalador"));
+    document.head.appendChild(script);
+  });
+}
+
+let INSTALADOR = null;
+
+window.addEventListener("DOMContentLoaded", async () => {
+  try {
+    INSTALADOR = await carregarDadosInstalador();
+    console.log("Dados do instalador carregados:", INSTALADOR);
+  } catch (erro) {
+    console.error(erro);
+  }
+});
+</script>
 </body>
 </html>
