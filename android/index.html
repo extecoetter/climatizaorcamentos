@@ -1154,61 +1154,18 @@ function loadLogoJpegDataUrl(){
     logo: "/climatizaorcamentos/logo.png"
   };
 
-function getClienteAtual() {
-  const params = new URLSearchParams(window.location.search);
-  let cliente = params.get("cliente");
-
-  if (cliente) {
-    localStorage.setItem("cliente_pwa", cliente);
-    return cliente;
-  }
-
-  cliente = localStorage.getItem("cliente_pwa");
-  if (cliente) {
-    return cliente;
-  }
-
-  return null;
-}
-
 function carregarConfigCliente() {
-  const cliente = getClienteAtual();
+  const params = new URLSearchParams(window.location.search);
+  const cliente = params.get("cliente");
 
   if (!cliente) {
-    console.warn("Cliente não informado na URL e não encontrado no armazenamento.");
+    console.warn("Cliente não informado na URL");
     return Promise.resolve();
-  }
-
-  if (!window.location.search.includes("cliente=")) {
-    const novaUrl = "/climatizaorcamentos/android/index.html?cliente=" + encodeURIComponent(cliente);
-    try { window.history.replaceState({}, "", novaUrl); } catch (e) {}
   }
 
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
     script.src = "/climatizaorcamentos/clientes/" + cliente + "/config.js";
-
-    script.onload = () => {
-      if (window.CLIENT_CONFIG && window.CLIENT_CONFIG.installer) {
-        INSTALLER = {
-          nome: window.CLIENT_CONFIG.installer.nome || INSTALLER.nome,
-          whats: window.CLIENT_CONFIG.installer.whats || INSTALLER.whats,
-          pix: window.CLIENT_CONFIG.installer.pix || INSTALLER.pix,
-          logo: window.CLIENT_CONFIG.logo || window.CLIENT_CONFIG.installer.logo || INSTALLER.logo
-        };
-      }
-
-      console.log("INSTALLER carregado:", INSTALLER);
-      resolve();
-    };
-
-    script.onerror = () => {
-      reject(new Error("Não foi possível carregar /climatizaorcamentos/clientes/" + cliente + "/config.js"));
-    };
-
-    document.head.appendChild(script);
-  });
-}
 
       script.onload = () => {
         if (window.CLIENT_CONFIG && window.CLIENT_CONFIG.installer) {
