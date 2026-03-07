@@ -1,9 +1,9 @@
 window.CLIENT_CONFIG = {
   installer: {
-    nome: "Cliente Modelo Modelo",
+    nome: "Cliente aAndroid Teste",
     whats: "(14) 99707-3447",
-    pix: "14 99707 3447 / Cliente Modelo"
+    pix: "14 99707 3447 / Android Teste"
   },
 
-  logo: "/climatizaorcamentos/clientes/clientemodelo/logo.png"
+  logo: "/climatizaorcamentos/clientes/androidteste/logo.png"
 };
