@@ -1665,14 +1665,5 @@ document.addEventListener('DOMContentLoaded', async function(){
 });
 
 </script>
-     <script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("/climatizaorcamentos/android/service-worker.js")
-        .then((reg) => console.log("SW Android registrado:", reg.scope))
-        .catch((err) => console.error("Erro ao registrar SW Android:", err));
-    });
-  }
-</script>
 </body>
 </html>
