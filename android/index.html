@@ -1148,9 +1148,9 @@ function loadLogoJpegDataUrl(){
   window.CLIENT_CONFIG = window.CLIENT_CONFIG || null;
 
   let INSTALLER = {
-    nome: "Robson Andre Extecoetter",
-    whats: "(14) 99707-3447",
-    pix: "14 99707 3447 / Robson A Extecoetter",
+    nome: "Dados do instalador nao carregados",
+    whats: "erro",
+    pix: "erro",
     logo: "/climatizaorcamentos/logo.png"
   };
 
@@ -1390,12 +1390,15 @@ function escapeHtml(s){
 
 // Dados do instalador (config por cliente)
 const logoEl = document.getElementById('pdfLogo');
-if(logoEl){
-  const logoSrc = (INSTALLER && INSTALLER.logo)
-    ? INSTALLER.logo
-    : "/climatizaorcamentos/logo.png";
 
-  logoEl.src = logoSrc + (logoSrc.indexOf("?") >= 0 ? "&" : "?") + "v=" + (window.APP_VERSION || "");
+if (logoEl) {
+  if (INSTALLER && INSTALLER.logo) {
+    logoEl.style.display = 'block';
+    logoEl.src = INSTALLER.logo + (INSTALLER.logo.indexOf('?') >= 0 ? '&' : '?') + 'v=' + encodeURIComponent(window.APP_VERSION || '');
+  } else {
+    logoEl.removeAttribute('src');
+    logoEl.style.display = 'none';
+  }
 }
 
 const nomeInst = (INSTALLER && INSTALLER.nome) ? INSTALLER.nome : "";
