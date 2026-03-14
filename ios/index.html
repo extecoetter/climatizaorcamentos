@@ -39,6 +39,8 @@
       --shadow: 0 10px 30px rgba(17,24,39,.08);
       --radius:18px;
       --pdf-soft-blue:#eaf2ff;
+      --pdf-accent:#e91e63;
+      --pdf-soft-pink:#fde7f1;
     }
     *{box-sizing:border-box}
     body{
@@ -297,7 +299,7 @@
       right:0;
       bottom:-1px;
       height:2px;
-      background: rgba(11,94,215,.35);
+      background: rgba(233,30,99,.35);
     }
 
     .pdf .top{
@@ -347,7 +349,7 @@
     }
     .pdf .datebox small{
       display:block;
-      color: var(--brand-strong);
+      color: var(--pdf-accent);
       font-weight:1000;
       letter-spacing:.4px;
       text-transform: uppercase;
@@ -364,13 +366,13 @@
       font-weight: 900;
       color:#0b1220;
     }
-    .pdf .datebox .validadeLine .k{ color: var(--brand-strong); font-weight: 1000; }
+    .pdf .datebox .validadeLine .k{ color: var(--pdf-accent); font-weight: 1000; }
 
     .pdf .instaladorBox{
       color:#0b1220;
     }
     .pdf .instaladorBox .k{
-      color: var(--brand-strong);
+      color: var(--pdf-accent);
       font-weight:1000;
       margin-right:4px;
     }
@@ -396,7 +398,7 @@
     }
 
     .pdf .instLine{ margin-top: 4px; }
-    .pdf .instLine .k{ color: var(--brand-strong); font-weight: 1000; }
+    .pdf .instLine .k{ color: var(--pdf-accent); font-weight: 1000; }
     .pdf .instLine .v{ color:#0b1220; font-weight: 900; }
 
     .pdf .iconWA{
@@ -433,7 +435,7 @@
     }
     .pdf .datebox small{
       display:block;
-      color: var(--brand-strong);
+      color: var(--pdf-accent);
       font-weight:1000;
       letter-spacing:.4px;
       text-transform: uppercase;
@@ -444,8 +446,8 @@
     }
 
     .pdf .clientbox{
-      border:1px solid #dbeafe;
-      background: var(--pdf-soft-blue);
+      border:1px solid #f9a8d4;
+      background: var(--pdf-soft-pink);
       border-radius: 12px;
       padding: 14px;
       margin-top: 14px;
@@ -454,11 +456,11 @@
 }
     
     .pdf .lblBlue{
-      color: var(--brand-strong);
+      color: var(--pdf-accent);
       font-weight: 1000;
     }
 .pdf .clientbox small{
-      color: var(--brand-strong);
+      color: var(--pdf-accent);
       font-weight: 1000;
       text-transform: uppercase;
       letter-spacing:.4px;
@@ -474,7 +476,7 @@
     }
     .pdf th{
       text-align:left;
-      color: var(--brand-strong); /* azul forte */
+      color: var(--pdf-accent); /* azul forte */
       border-bottom:2px solid #0f172a;
       padding: 10px 0;
       font-weight: 1000;
@@ -552,7 +554,7 @@
 
 
     .pdf .bottom .box small{
-      color: var(--brand-strong); /* azul forte */
+      color: var(--pdf-accent); /* azul forte */
       font-weight: 1000;
       text-transform: uppercase;
       letter-spacing:.4px;
@@ -599,7 +601,7 @@
   white-space:nowrap;
 }
 .pdf .datebox small{
-  color: var(--brand-strong);
+  color: var(--pdf-accent);
   font-weight:1000;
   letter-spacing:.4px;
   text-transform: uppercase;
@@ -607,9 +609,9 @@
 }
 .pdf .datebox #pdfData{ font-size: 12px; font-weight: 1000; }
 .pdf .datebox .validadeLine{ margin-top: 6px; font-size: 12px; font-weight: 900; color:#0b1220; }
-.pdf .datebox .validadeLine .k{ color: var(--brand-strong); font-weight: 1000; }
+.pdf .datebox .validadeLine .k{ color: var(--pdf-accent); font-weight: 1000; }
 .pdf .instLine{ margin-top: 4px; }
-.pdf .instLine .k{ color: var(--brand-strong); font-weight: 1000; }
+.pdf .instLine .k{ color: var(--pdf-accent); font-weight: 1000; }
 .pdf .instLine .v{ color:#0b1220; font-weight: 900; }
 .pdf .pdfTitleCenter{ margin: 12px 0 10px 0; }
 .pdf .clientbox{ margin-top: 12px; }
@@ -617,7 +619,7 @@
   
     /* --- SURGICAL PDF LAYOUT FIXES (v12-fix3) --- */
     .pdf .pdfTitleCenter{
-      color: var(--brand-strong) !important;
+      color: var(--pdf-accent) !important;
       font-size: 18px !important; /* 2pt smaller vs common 20px-ish heading */
       font-weight: 1000 !important;
       margin: 14px 0 10px 0 !important;
@@ -866,20 +868,20 @@
 
     doc.setFont("helvetica","bold");
     doc.setFontSize(12);
-    doc.setTextColor(11,94,215);
+    doc.setTextColor(233,30,99);
     doc.text("Cliente:", margin, y);
     doc.setTextColor(17,24,39);
     doc.text(cliente, margin+62, y);
 
     y += 18;
-    doc.setTextColor(11,94,215);
+    doc.setTextColor(233,30,99);
     doc.text("Tel:", margin, y);
     doc.setTextColor(17,24,39);
     doc.text(telefone, margin+30, y);
 
     y += 18;
     if(endereco){
-      doc.setTextColor(11,94,215);
+      doc.setTextColor(233,30,99);
       doc.text("End:", margin, y);
       doc.setTextColor(17,24,39);
       doc.setFont("helvetica","normal");
@@ -896,7 +898,7 @@
 
     y += 26;
     doc.setFontSize(10);
-    doc.setTextColor(11,94,215);
+    doc.setTextColor(233,30,99);
     doc.text("DESCRIÇÃO DO SERVIÇO", margin, y);
     doc.text("QTD", margin + contentW - 160, y, { align:"center" });
     doc.text("SUBTOTAL", margin + contentW, y, { align:"right" });
@@ -965,7 +967,7 @@
 
     y += 34;
     doc.setFontSize(8);
-    doc.setTextColor(11,94,215);
+    doc.setTextColor(233,30,99);
     doc.setFont("helvetica","bold");
     doc.text("OBSERVAÇÕES", margin, y);
     doc.setFont("helvetica","normal");
@@ -977,7 +979,7 @@
     y += 44 + obsLines.length * 10;
     doc.setFont("helvetica","bold");
     doc.setFontSize(7);
-    doc.setTextColor(11,94,215);
+    doc.setTextColor(233,30,99);
     doc.text("FORMA DE PAGAMENTO", margin, y);
     doc.setFont("helvetica","normal");
     doc.setFontSize(8);
